@@ -3,14 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<meta name="theme-color" content="#1a1a2e">
+<meta name="theme-color" content="#0f1117">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Solworks">
 <link rel="manifest" href="manifest.json">
 <title>Solworks — Raspored</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@600;700;800&family=Inter:wght@400;500&display=swap" rel="stylesheet">
 <style>
 :root {
@@ -34,490 +32,337 @@
   --font-body: 'Inter', sans-serif;
   --font-mono: 'DM Mono', monospace;
 }
-
 * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-
-body {
-  background: var(--bg);
-  color: var(--text);
-  font-family: var(--font-body);
-  font-size: 14px;
-  min-height: 100dvh;
-  overflow-x: hidden;
-}
+body { background: var(--bg); color: var(--text); font-family: var(--font-body); font-size: 14px; min-height: 100dvh; overflow-x: hidden; }
 
 /* ── TOP BAR ── */
 .topbar {
-  position: sticky;
-  top: 0;
-  z-index: 100;
-  background: var(--bg);
-  border-bottom: 1px solid var(--border);
+  position: sticky; top: 0; z-index: 100;
+  background: var(--bg); border-bottom: 1px solid var(--border);
   padding: 0 16px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  height: 56px;
+  display: flex; align-items: center; justify-content: space-between;
+  height: 52px;
 }
-.topbar-logo {
-  font-family: var(--font-display);
-  font-size: 18px;
-  font-weight: 800;
-  letter-spacing: -0.5px;
-  color: var(--text);
-}
+.topbar-logo { font-family: var(--font-display); font-size: 18px; font-weight: 800; letter-spacing: -0.5px; }
 .topbar-logo span { color: var(--accent); }
-.topbar-actions { display: flex; gap: 8px; align-items: center; }
-.btn-icon {
-  width: 36px; height: 36px;
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--border);
-  background: var(--surface);
-  color: var(--text);
-  display: flex; align-items: center; justify-content: center;
-  cursor: pointer; font-size: 16px;
-  transition: background 0.15s;
-}
-.btn-icon:active { background: var(--surface2); }
 .btn-add {
-  height: 36px; padding: 0 14px;
-  border-radius: var(--radius-sm);
-  border: none;
-  background: var(--accent);
-  color: #0f1117;
-  font-family: var(--font-display);
-  font-weight: 700;
-  font-size: 13px;
-  cursor: pointer;
-  display: flex; align-items: center; gap: 6px;
+  height: 34px; padding: 0 14px;
+  border-radius: var(--radius-sm); border: none;
+  background: var(--accent); color: #0f1117;
+  font-family: var(--font-display); font-weight: 700; font-size: 13px;
+  cursor: pointer; display: flex; align-items: center; gap: 5px;
   transition: opacity 0.15s;
 }
-.btn-add:active { opacity: 0.85; }
+.btn-add:active { opacity: 0.8; }
 
 /* ── TABS ── */
 .tabs {
-  display: flex;
-  border-bottom: 1px solid var(--border);
-  background: var(--bg);
-  overflow-x: auto;
-  scrollbar-width: none;
+  display: flex; border-bottom: 1px solid var(--border);
+  background: var(--bg); position: sticky; top: 52px; z-index: 99;
 }
-.tabs::-webkit-scrollbar { display: none; }
 .tab {
-  flex: 1; min-width: 80px;
-  padding: 12px 8px;
-  text-align: center;
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--muted);
-  cursor: pointer;
-  border-bottom: 2px solid transparent;
-  white-space: nowrap;
-  transition: color 0.15s, border-color 0.15s;
-  user-select: none;
+  flex: 1; padding: 11px 8px; text-align: center;
+  font-size: 12px; font-weight: 500; color: var(--muted);
+  cursor: pointer; border-bottom: 2px solid transparent;
+  transition: color 0.15s, border-color 0.15s; user-select: none;
 }
 .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
-
-/* ── MAIN CONTENT ── */
 .view { display: none; }
 .view.active { display: block; }
 
-/* ── SUMMARY STRIP ── */
-.summary-strip {
+/* ── WEEK NAVIGATOR ── */
+.week-nav {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 12px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  position: sticky; top: 95px; z-index: 90;
+}
+.week-nav-btn {
+  width: 36px; height: 36px; border-radius: var(--radius-sm);
+  border: 1px solid var(--border); background: var(--bg);
+  color: var(--text); font-size: 18px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: background 0.15s; flex-shrink: 0;
+}
+.week-nav-btn:active { background: var(--surface2); }
+.week-nav-btn:disabled { opacity: 0.3; cursor: default; }
+.week-nav-center { flex: 1; text-align: center; }
+.week-nav-label {
+  font-family: var(--font-display); font-size: 14px; font-weight: 700;
+  color: var(--text); display: block;
+}
+.week-nav-sub { font-size: 11px; color: var(--muted); margin-top: 1px; display: block; }
+.week-nav-today {
+  font-size: 10px; color: var(--accent); font-weight: 600;
+  padding: 2px 8px; border: 1px solid rgba(232,160,39,0.3);
+  border-radius: 999px; cursor: pointer; margin-top: 3px;
+  display: inline-block;
+}
+
+/* ── CALENDAR WEEK VIEW ── */
+.cal-week {
+  padding: 10px 10px 100px;
+}
+
+/* Day columns */
+.cal-day-row {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 1px;
-  background: var(--border);
+  grid-template-columns: 52px repeat(5, 1fr);
+  gap: 4px;
+  margin-bottom: 4px;
+}
+.cal-day-header {
+  background: var(--surface2);
+  border-radius: var(--radius-sm);
+  padding: 8px 4px;
+  text-align: center;
+  cursor: pointer;
+  transition: background 0.15s;
+  border: 1px solid var(--border);
+}
+.cal-day-header.today {
+  background: rgba(232,160,39,0.15);
+  border-color: rgba(232,160,39,0.4);
+}
+.cal-day-header.past { opacity: 0.5; }
+.cal-day-name { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
+.cal-day-num {
+  font-family: var(--font-display); font-size: 16px; font-weight: 700;
+  color: var(--text); margin-top: 1px;
+}
+.cal-day-header.today .cal-day-num { color: var(--accent); }
+.cal-time-label {
+  display: flex; flex-direction: column; justify-content: flex-start;
+  padding-top: 4px;
+}
+/* Empty left corner */
+.cal-corner { background: transparent; border-radius: var(--radius-sm); }
+
+/* Job blocks in calendar */
+.cal-grid {
+  display: grid;
+  grid-template-columns: 52px repeat(5, 1fr);
+  gap: 4px;
+  margin-top: 4px;
+}
+.cal-grid-col {
+  display: flex; flex-direction: column; gap: 3px; min-height: 60px;
+  padding: 4px 0;
+}
+.cal-empty-col {
+  border-radius: var(--radius-sm);
+  border: 1px dashed var(--border);
+  min-height: 60px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+.cal-empty-col:active { background: var(--surface); border-color: var(--accent); }
+.cal-empty-plus { font-size: 18px; color: var(--border); }
+.cal-empty-col.past { cursor: default; }
+.cal-empty-col.past:active { background: transparent; border-color: var(--border); }
+
+/* Job pill in calendar */
+.job-pill {
+  border-radius: 6px;
+  padding: 5px 7px;
+  font-size: 11px;
+  cursor: pointer;
+  transition: opacity 0.15s;
+  position: relative;
+  overflow: hidden;
+  min-height: 38px;
+  display: flex; flex-direction: column; justify-content: center;
+}
+.job-pill:active { opacity: 0.8; }
+.job-pill-montaza { background: rgba(232,80,58,0.18); border: 1px solid rgba(232,80,58,0.4); }
+.job-pill-izmjera { background: rgba(61,126,255,0.18); border: 1px solid rgba(61,126,255,0.4); }
+.job-pill-gotovo  { background: rgba(58,184,122,0.12); border: 1px solid rgba(58,184,122,0.3); opacity: 0.7; }
+.job-pill-name { font-weight: 600; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 10px; }
+.job-pill-sub { font-size: 9px; color: var(--muted); margin-top: 1px; }
+.job-pill-montaza .job-pill-sub { color: var(--red); }
+.job-pill-izmjera .job-pill-sub { color: var(--accent2); }
+.job-pill-gotovo .job-pill-sub  { color: var(--green); }
+.overlap-dot {
+  position: absolute; top: 4px; right: 4px;
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--red);
+}
+
+/* Row labels */
+.cal-row-label-cell {
+  display: flex; align-items: center; justify-content: flex-end;
+  padding-right: 6px;
+}
+.cal-row-lbl {
+  font-size: 9px; color: var(--muted); text-transform: uppercase;
+  letter-spacing: 0.5px; font-family: var(--font-mono); text-align: right;
+}
+
+/* Izmjere summary row */
+.izmjere-row-wrap {
+  margin-top: 8px;
+  background: var(--surface);
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(61,126,255,0.2);
+  overflow: hidden;
+}
+.izmjere-row-head {
+  padding: 6px 10px;
+  font-size: 10px; font-weight: 600; color: var(--accent2);
+  text-transform: uppercase; letter-spacing: 0.5px;
   border-bottom: 1px solid var(--border);
 }
-.summary-card {
-  background: var(--bg);
-  padding: 12px 10px;
+.izmjere-row-grid {
+  display: grid; grid-template-columns: 52px repeat(5, 1fr); gap: 4px;
+  padding: 6px;
+}
+.izmjere-day-cell {
+  background: rgba(61,126,255,0.1);
+  border-radius: 5px;
+  padding: 4px 4px;
+  min-height: 28px;
+  font-size: 9px;
+  color: var(--accent2);
   text-align: center;
+  line-height: 1.3;
 }
-.summary-card .num {
-  font-family: var(--font-display);
-  font-size: 22px;
-  font-weight: 800;
-  line-height: 1;
-}
-.summary-card .lbl {
-  font-size: 10px;
-  color: var(--muted);
-  margin-top: 3px;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-.num-red { color: var(--red); }
-.num-amber { color: var(--accent); }
-.num-green { color: var(--green); }
-.num-blue { color: var(--accent2); }
+.izmjere-day-cell.empty { background: transparent; }
 
-/* ── JOBS LIST ── */
-.section-header {
-  padding: 16px 16px 8px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-.section-title {
-  font-family: var(--font-display);
-  font-size: 13px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  color: var(--muted);
-}
-.section-count {
-  font-family: var(--font-mono);
-  font-size: 11px;
-  color: var(--muted);
-}
-
-.jobs-list { padding: 0 12px 100px; display: flex; flex-direction: column; gap: 10px; }
-
-.job-card {
-  background: var(--surface);
-  border-radius: var(--radius);
-  border: 1px solid var(--border);
+/* Overlap warning row */
+.overlap-row-wrap {
+  margin-top: 6px;
+  background: rgba(232,80,58,0.06);
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(232,80,58,0.2);
   overflow: hidden;
-  transition: border-color 0.15s;
-  cursor: pointer;
+  display: none;
 }
+.overlap-row-wrap.visible { display: block; }
+.overlap-row-head {
+  padding: 6px 10px;
+  font-size: 10px; font-weight: 600; color: var(--red);
+  text-transform: uppercase; letter-spacing: 0.5px;
+  border-bottom: 1px solid rgba(232,80,58,0.2);
+}
+.overlap-row-grid {
+  display: grid; grid-template-columns: 52px repeat(5, 1fr); gap: 4px;
+  padding: 6px;
+}
+.overlap-day-cell {
+  border-radius: 5px; min-height: 24px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px;
+}
+.overlap-day-cell.has-overlap { background: rgba(232,80,58,0.2); }
+
+/* ── ACTIVE LIST VIEW ── */
+.summary-strip {
+  display: grid; grid-template-columns: repeat(4, 1fr);
+  gap: 1px; background: var(--border); border-bottom: 1px solid var(--border);
+}
+.summary-card { background: var(--bg); padding: 10px 8px; text-align: center; }
+.summary-card .num { font-family: var(--font-display); font-size: 20px; font-weight: 800; line-height: 1; }
+.summary-card .lbl { font-size: 10px; color: var(--muted); margin-top: 3px; text-transform: uppercase; letter-spacing: 0.5px; }
+.num-red { color: var(--red); } .num-amber { color: var(--accent); }
+.num-green { color: var(--green); } .num-blue { color: var(--accent2); }
+
+.section-header { padding: 14px 16px 8px; display: flex; align-items: center; justify-content: space-between; }
+.section-title { font-family: var(--font-display); font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); }
+.section-count { font-family: var(--font-mono); font-size: 11px; color: var(--muted); }
+
+.jobs-list { padding: 0 12px 100px; display: flex; flex-direction: column; gap: 8px; }
+.job-card { background: var(--surface); border-radius: var(--radius); border: 1px solid var(--border); overflow: hidden; cursor: pointer; transition: border-color 0.15s; }
 .job-card:active { border-color: var(--accent); }
 .job-card.overlap { border-color: var(--red); border-width: 2px; }
-
-.job-card-top {
-  padding: 12px 14px 10px;
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 8px;
-}
-.job-name {
-  font-family: var(--font-display);
-  font-size: 15px;
-  font-weight: 700;
-  color: var(--text);
-  line-height: 1.2;
-}
-.job-addr {
-  font-size: 12px;
-  color: var(--muted);
-  margin-top: 2px;
-}
+.job-card-top { padding: 11px 13px 9px; display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+.job-name { font-family: var(--font-display); font-size: 14px; font-weight: 700; line-height: 1.2; }
+.job-addr { font-size: 11px; color: var(--muted); margin-top: 2px; }
 .job-badges { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; flex-shrink: 0; }
-
-.badge {
-  font-family: var(--font-mono);
-  font-size: 10px;
-  font-weight: 500;
-  padding: 3px 8px;
-  border-radius: 999px;
-  white-space: nowrap;
-}
+.badge { font-family: var(--font-mono); font-size: 10px; padding: 2px 7px; border-radius: 999px; white-space: nowrap; }
 .badge-red    { background: var(--red-bg);   color: var(--red);    border: 1px solid rgba(232,80,58,0.3); }
 .badge-green  { background: var(--green-bg); color: var(--green);  border: 1px solid rgba(58,184,122,0.3); }
 .badge-amber  { background: var(--amber-bg); color: var(--accent); border: 1px solid rgba(232,160,39,0.3); }
 .badge-blue   { background: var(--blue-bg);  color: var(--accent2);border: 1px solid rgba(61,126,255,0.3); }
 .badge-gray   { background: var(--surface2); color: var(--muted);  border: 1px solid var(--border); }
-
-.job-card-meta {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1px;
-  background: var(--border);
-  border-top: 1px solid var(--border);
-}
-.meta-cell {
-  background: var(--bg);
-  padding: 8px 14px;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
+.job-card-meta { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--border); border-top: 1px solid var(--border); }
+.meta-cell { background: var(--bg); padding: 7px 13px; }
 .meta-label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
-.meta-value { font-family: var(--font-mono); font-size: 12px; color: var(--text); }
-.meta-value.ok { color: var(--green); }
-.meta-value.no { color: var(--red); }
-.meta-value.warn { color: var(--accent); }
+.meta-value { font-family: var(--font-mono); font-size: 11px; color: var(--text); margin-top: 2px; }
+.meta-value.ok { color: var(--green); } .meta-value.no { color: var(--red); }
+.overlap-banner { background: var(--red-bg); border-top: 1px solid rgba(232,80,58,0.3); padding: 6px 13px; font-size: 11px; color: var(--red); font-weight: 500; }
 
-.overlap-banner {
-  background: var(--red-bg);
-  border-top: 1px solid rgba(232,80,58,0.3);
-  padding: 7px 14px;
-  font-size: 11px;
-  color: var(--red);
-  font-weight: 500;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
+/* ── ARCHIVE VIEW ── */
+.archive-card { background: var(--surface); border-radius: var(--radius); border: 1px solid var(--border); padding: 11px 13px; margin: 0 12px 7px; opacity: 0.65; display: flex; align-items: center; justify-content: space-between; gap: 8px; cursor: pointer; }
+.archive-name { font-size: 13px; font-weight: 600; }
+.archive-date { font-family: var(--font-mono); font-size: 10px; color: var(--muted); margin-top: 2px; }
+.archive-iznos { font-family: var(--font-mono); font-size: 12px; color: var(--green); font-weight: 500; }
 
-/* ── CALENDAR VIEW ── */
-.calendar-wrap {
-  overflow-x: auto;
-  padding-bottom: 100px;
-}
-.calendar-table {
-  min-width: max-content;
-  border-collapse: collapse;
-}
-.cal-label-col { width: 140px; min-width: 140px; }
-.cal-day-col { width: 48px; min-width: 48px; }
-
-.cal-head-month {
-  font-family: var(--font-display);
-  font-size: 11px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  background: var(--surface2);
-  color: var(--muted);
-  padding: 8px 6px 4px;
-  text-align: left;
-  position: sticky; left: 0;
-  border-right: 1px solid var(--border);
-}
-.cal-month-cell {
-  background: var(--surface2);
-  color: var(--muted);
-  font-size: 10px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  padding: 6px 4px;
-  text-align: center;
-  border-right: 1px solid var(--border);
-  border-bottom: 1px solid var(--border);
-}
-
-.cal-head-day {
-  font-family: var(--font-mono);
-  font-size: 10px;
-  text-align: center;
-  padding: 4px 2px 2px;
-  border-bottom: 1px solid var(--border);
-  border-right: 1px solid var(--border);
-  color: var(--muted);
-  position: sticky; top: 56px; z-index: 10;
-}
-.cal-head-day.today { color: var(--accent); }
-.cal-head-day.weekend { opacity: 0.45; }
-.cal-head-num {
-  font-size: 11px;
-  font-weight: 500;
-  display: block;
-}
-
-.cal-row-label {
-  position: sticky; left: 0; z-index: 5;
-  background: var(--surface);
-  border-right: 2px solid var(--border);
-  border-bottom: 1px solid var(--border);
-  padding: 0 10px;
-  min-height: 40px;
-}
-.cal-label-name {
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--text);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 130px;
-}
-.cal-label-sub {
-  font-size: 10px;
-  color: var(--muted);
-  white-space: nowrap;
-}
-
-.cal-cell {
-  border-right: 1px solid var(--border);
-  border-bottom: 1px solid var(--border);
-  text-align: center;
-  font-size: 10px;
-  height: 40px;
-  vertical-align: middle;
-}
-.cal-cell.weekend { background: rgba(255,255,255,0.02); }
-.cal-cell.today-col { background: rgba(232,160,39,0.06); }
-
-.cal-block-montaza {
-  background: var(--red);
-  color: white;
-  font-family: var(--font-mono);
-  font-size: 9px;
-  font-weight: 500;
-  width: 100%; height: 100%;
-  display: flex; align-items: center; justify-content: center;
-}
-.cal-block-gotovo {
-  background: var(--green);
-  color: white;
-  font-size: 11px;
-  width: 100%; height: 100%;
-  display: flex; align-items: center; justify-content: center;
-  opacity: 0.7;
-}
-.cal-block-izmjera {
-  background: var(--accent2);
-  color: white;
-  font-size: 10px;
-  width: 100%; height: 100%;
-  display: flex; align-items: center; justify-content: center;
-}
-
-/* Overlap row */
-.cal-row-izmjere .cal-row-label { background: rgba(61,126,255,0.08); }
-.cal-row-overlap .cal-row-label { background: rgba(232,80,58,0.08); }
-.cal-izmjera-cell { background: rgba(61,126,255,0.15); color: var(--accent2); font-size: 9px; line-height: 1.2; padding: 2px; }
-.cal-overlap-cell { background: rgba(232,80,58,0.2); color: var(--red); font-size: 14px; }
-
-/* ── DETAIL MODAL ── */
-.modal-overlay {
-  display: none;
-  position: fixed; inset: 0; z-index: 200;
-  background: rgba(0,0,0,0.7);
-  backdrop-filter: blur(4px);
-  align-items: flex-end;
-}
+/* ── MODALS ── */
+.modal-overlay { display: none; position: fixed; inset: 0; z-index: 200; background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); align-items: flex-end; }
 .modal-overlay.open { display: flex; }
-.modal {
-  background: var(--surface);
-  border-radius: var(--radius) var(--radius) 0 0;
-  border: 1px solid var(--border);
-  width: 100%;
-  max-height: 90dvh;
-  overflow-y: auto;
-  padding-bottom: env(safe-area-inset-bottom);
-  animation: slideUp 0.25s ease;
-}
+.modal { background: var(--surface); border-radius: var(--radius) var(--radius) 0 0; border: 1px solid var(--border); width: 100%; max-height: 92dvh; overflow-y: auto; padding-bottom: env(safe-area-inset-bottom); animation: slideUp 0.22s ease; }
 @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
-
-.modal-handle {
-  width: 36px; height: 4px;
-  background: var(--border);
-  border-radius: 2px;
-  margin: 12px auto 0;
-}
-.modal-header {
-  padding: 16px 16px 12px;
-  border-bottom: 1px solid var(--border);
-}
-.modal-title {
-  font-family: var(--font-display);
-  font-size: 18px;
-  font-weight: 800;
-}
-.modal-subtitle { font-size: 13px; color: var(--muted); margin-top: 2px; }
-
-.modal-section { padding: 16px; border-bottom: 1px solid var(--border); }
-.modal-section-title {
-  font-family: var(--font-display);
-  font-size: 11px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  color: var(--muted);
-  margin-bottom: 12px;
-}
-.detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-.detail-item {}
-.detail-label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 3px; }
-.detail-val { font-family: var(--font-mono); font-size: 13px; }
-
-.toggle-row {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 10px 0;
-  border-bottom: 1px solid var(--border);
-}
+.modal-handle { width: 36px; height: 4px; background: var(--border); border-radius: 2px; margin: 10px auto 0; }
+.modal-header { padding: 14px 16px 11px; border-bottom: 1px solid var(--border); }
+.modal-title { font-family: var(--font-display); font-size: 17px; font-weight: 800; }
+.modal-subtitle { font-size: 12px; color: var(--muted); margin-top: 2px; }
+.modal-section { padding: 14px 16px; border-bottom: 1px solid var(--border); }
+.modal-section-title { font-family: var(--font-display); font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); margin-bottom: 10px; }
+.detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.detail-label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px; }
+.detail-val { font-family: var(--font-mono); font-size: 12px; }
+.toggle-row { display: flex; align-items: center; justify-content: space-between; padding: 9px 0; border-bottom: 1px solid var(--border); }
 .toggle-row:last-child { border-bottom: none; }
-.toggle-label { font-size: 14px; }
-.toggle {
-  width: 44px; height: 24px;
-  border-radius: 12px;
-  background: var(--surface2);
-  border: 1px solid var(--border);
-  position: relative; cursor: pointer;
-  transition: background 0.2s;
-}
+.toggle-label { font-size: 13px; }
+.toggle { width: 42px; height: 24px; border-radius: 12px; background: var(--surface2); border: 1px solid var(--border); position: relative; cursor: pointer; transition: background 0.2s; }
 .toggle.on { background: var(--green); border-color: var(--green); }
-.toggle::after {
-  content: '';
-  position: absolute;
-  top: 2px; left: 2px;
-  width: 18px; height: 18px;
-  border-radius: 50%;
-  background: white;
-  transition: transform 0.2s;
-}
-.toggle.on::after { transform: translateX(20px); }
-
-.modal-actions { padding: 16px; display: flex; gap: 8px; }
-.btn-primary {
-  flex: 1; height: 44px;
-  border-radius: var(--radius-sm);
-  background: var(--accent);
-  color: #0f1117;
-  font-family: var(--font-display);
-  font-weight: 700;
-  font-size: 14px;
-  border: none; cursor: pointer;
-  transition: opacity 0.15s;
-}
+.toggle::after { content: ''; position: absolute; top: 2px; left: 2px; width: 18px; height: 18px; border-radius: 50%; background: white; transition: transform 0.2s; }
+.toggle.on::after { transform: translateX(18px); }
+.modal-actions { padding: 14px 16px; display: flex; gap: 8px; }
+.btn-primary { flex: 1; height: 44px; border-radius: var(--radius-sm); background: var(--accent); color: #0f1117; font-family: var(--font-display); font-weight: 700; font-size: 14px; border: none; cursor: pointer; transition: opacity 0.15s; }
 .btn-primary:active { opacity: 0.85; }
-.btn-secondary {
-  height: 44px; padding: 0 16px;
-  border-radius: var(--radius-sm);
-  background: transparent;
-  color: var(--muted);
-  font-size: 14px;
-  border: 1px solid var(--border);
-  cursor: pointer;
-}
-
-/* ── ADD JOB MODAL ── */
-.form-group { margin-bottom: 14px; }
-.form-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; display: block; }
-.form-input {
-  width: 100%;
-  background: var(--bg);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  color: var(--text);
-  font-family: var(--font-body);
-  font-size: 14px;
-  padding: 10px 12px;
-  outline: none;
-  transition: border-color 0.15s;
-  -webkit-appearance: none;
-}
+.btn-secondary { height: 44px; padding: 0 14px; border-radius: var(--radius-sm); background: transparent; color: var(--muted); font-size: 14px; border: 1px solid var(--border); cursor: pointer; }
+.btn-danger { height: 44px; padding: 0 14px; border-radius: var(--radius-sm); background: var(--red-bg); color: var(--red); font-size: 13px; border: 1px solid rgba(232,80,58,0.3); cursor: pointer; }
+.form-group { margin-bottom: 12px; }
+.form-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 5px; display: block; }
+.form-input { width: 100%; background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text); font-family: var(--font-body); font-size: 14px; padding: 10px 12px; outline: none; transition: border-color 0.15s; -webkit-appearance: none; }
 .form-input:focus { border-color: var(--accent); }
 .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 select.form-input { cursor: pointer; }
 
-/* ── ARHIVA VIEW ── */
-.archive-card {
-  background: var(--surface);
-  border-radius: var(--radius);
-  border: 1px solid var(--border);
-  padding: 12px 14px;
-  margin: 0 12px 8px;
-  opacity: 0.7;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-}
-.archive-card-left {}
-.archive-name { font-size: 13px; font-weight: 600; }
-.archive-date { font-family: var(--font-mono); font-size: 11px; color: var(--muted); margin-top: 2px; }
-.archive-iznos { font-family: var(--font-mono); font-size: 13px; color: var(--green); font-weight: 500; }
+/* Prefill date hint */
+.prefill-hint { font-size: 11px; color: var(--accent); margin-bottom: 10px; padding: 6px 10px; background: var(--amber-bg); border-radius: var(--radius-sm); border: 1px solid rgba(232,160,39,0.2); display: none; }
+.prefill-hint.visible { display: block; }
 
-/* ── BOTTOM NAV ── */
-.bottom-safe { height: env(safe-area-inset-bottom); }
+/* ── PC / DESKTOP ── */
+@media (min-width: 768px) {
+  .topbar { padding: 0 28px; height: 58px; }
+  .topbar-logo { font-size: 20px; }
+  .btn-add { height: 38px; font-size: 14px; padding: 0 18px; }
+  .week-nav { padding: 12px 24px; top: 101px; }
+  .week-nav-label { font-size: 16px; }
+  .cal-week { padding: 16px 24px 80px; }
+  .cal-day-row, .cal-grid { grid-template-columns: 64px repeat(5, 1fr); gap: 6px; }
+  .izmjere-row-grid, .overlap-row-grid { grid-template-columns: 64px repeat(5, 1fr); gap: 6px; }
+  .job-pill { min-height: 44px; font-size: 12px; padding: 7px 9px; }
+  .job-pill-name { font-size: 11px; }
+  .job-pill-sub { font-size: 10px; }
+  .cal-empty-col { min-height: 70px; }
+  .cal-day-num { font-size: 18px; }
+  .jobs-list { padding: 0 24px 80px; }
+  .summary-strip { padding: 0 4px; }
+  .summary-card .num { font-size: 24px; }
+  .job-name { font-size: 15px; }
+}
+@media (min-width: 1024px) {
+  body { max-width: 900px; margin: 0 auto; }
+  .topbar, .tabs, .week-nav { max-width: 900px; left: 50%; transform: translateX(-50%); }
+  .topbar { position: sticky; transform: none; left: auto; }
+  .tabs { position: sticky; transform: none; left: auto; }
+  .week-nav { position: sticky; transform: none; left: auto; }
+}
 </style>
 </head>
 <body>
@@ -525,25 +370,37 @@ select.form-input { cursor: pointer; }
 <!-- TOP BAR -->
 <div class="topbar">
   <div class="topbar-logo">Sol<span>works</span></div>
-  <div class="topbar-actions">
-    <button class="btn-icon" onclick="openAddModal()" title="Novi posao">+</button>
-    <button class="btn-add" onclick="openAddModal()">Novi posao</button>
-  </div>
+  <button class="btn-add" onclick="openAddModal()">+ Novi posao</button>
 </div>
 
 <!-- TABS -->
 <div class="tabs">
-  <div class="tab active" onclick="switchTab('aktivni')">Aktivni</div>
-  <div class="tab" onclick="switchTab('kalendar')">Kalendar</div>
+  <div class="tab" onclick="switchTab('aktivni')">Poslovi</div>
+  <div class="tab active" onclick="switchTab('kalendar')">Kalendar</div>
   <div class="tab" onclick="switchTab('arhiva')">Arhiva</div>
 </div>
 
+<!-- ══ VIEW: KALENDAR ══ -->
+<div id="view-kalendar" class="view active">
+  <!-- Week navigator -->
+  <div class="week-nav">
+    <button class="week-nav-btn" id="btn-prev" onclick="prevWeek()">‹</button>
+    <div class="week-nav-center">
+      <span class="week-nav-label" id="week-label"></span>
+      <span class="week-nav-sub" id="week-sub"></span>
+      <span class="week-nav-today" onclick="goToCurrentWeek()" id="today-btn" style="display:none">Danas</span>
+    </div>
+    <button class="week-nav-btn" id="btn-next" onclick="nextWeek()">›</button>
+  </div>
+  <div class="cal-week" id="cal-week-body"></div>
+</div>
+
 <!-- ══ VIEW: AKTIVNI ══ -->
-<div id="view-aktivni" class="view active">
+<div id="view-aktivni" class="view">
   <div class="summary-strip">
     <div class="summary-card"><div class="num num-red" id="cnt-aktivni">0</div><div class="lbl">Aktivnih</div></div>
     <div class="summary-card"><div class="num num-amber" id="cnt-avans">0</div><div class="lbl">Avans</div></div>
-    <div class="summary-card"><div class="num num-red" id="cnt-neplac">0</div><div class="lbl">Neplaćeno</div></div>
+    <div class="summary-card"><div class="num num-red" id="cnt-neplac">0</div><div class="lbl">Neplać.</div></div>
     <div class="summary-card"><div class="num num-blue" id="cnt-izmjere">0</div><div class="lbl">Izmjere</div></div>
   </div>
   <div class="section-header">
@@ -553,15 +410,10 @@ select.form-input { cursor: pointer; }
   <div class="jobs-list" id="active-jobs-list"></div>
 </div>
 
-<!-- ══ VIEW: KALENDAR ══ -->
-<div id="view-kalendar" class="view">
-  <div class="calendar-wrap" id="calendar-wrap"></div>
-</div>
-
 <!-- ══ VIEW: ARHIVA ══ -->
 <div id="view-arhiva" class="view">
   <div class="section-header">
-    <span class="section-title">Arhiva završenih poslova</span>
+    <span class="section-title">Arhiva</span>
     <span class="section-count" id="archive-count-label"></span>
   </div>
   <div id="archive-list"></div>
@@ -578,42 +430,34 @@ select.form-input { cursor: pointer; }
     <div class="modal-section">
       <div class="modal-section-title">Kontakt & Financije</div>
       <div class="detail-grid">
-        <div class="detail-item"><div class="detail-label">Telefon</div><div class="detail-val" id="dm-tel"></div></div>
-        <div class="detail-item"><div class="detail-label">Iznos ponude</div><div class="detail-val" id="dm-iznos"></div></div>
-        <div class="detail-item"><div class="detail-label">Status plaćanja</div><div class="detail-val" id="dm-plac"></div></div>
-        <div class="detail-item"><div class="detail-label">Avans primljen</div><div class="detail-val" id="dm-avans"></div></div>
+        <div><div class="detail-label">Telefon</div><div class="detail-val" id="dm-tel"></div></div>
+        <div><div class="detail-label">Iznos ponude</div><div class="detail-val" id="dm-iznos"></div></div>
+        <div><div class="detail-label">Status plaćanja</div><div class="detail-val" id="dm-plac"></div></div>
+        <div><div class="detail-label">Avans primljen</div><div class="detail-val" id="dm-avans"></div></div>
       </div>
     </div>
     <div class="modal-section">
       <div class="modal-section-title">Termini</div>
       <div class="detail-grid">
-        <div class="detail-item"><div class="detail-label">Datum izmjere</div><div class="detail-val" id="dm-izm-dat"></div></div>
-        <div class="detail-item"><div class="detail-label">Montaža početak</div><div class="detail-val" id="dm-mont-poc"></div></div>
-        <div class="detail-item"><div class="detail-label">Montaža kraj (plan)</div><div class="detail-val" id="dm-mont-kraj"></div></div>
-        <div class="detail-item"><div class="detail-label">Trajanje (plan)</div><div class="detail-val" id="dm-trajanje"></div></div>
+        <div><div class="detail-label">Datum izmjere</div><div class="detail-val" id="dm-izm-dat"></div></div>
+        <div><div class="detail-label">Montaža početak</div><div class="detail-val" id="dm-mont-poc"></div></div>
+        <div><div class="detail-label">Montaža kraj (plan)</div><div class="detail-val" id="dm-mont-kraj"></div></div>
+        <div><div class="detail-label">Trajanje</div><div class="detail-val" id="dm-trajanje"></div></div>
       </div>
     </div>
     <div class="modal-section">
       <div class="modal-section-title">Status radova</div>
-      <div class="toggle-row">
-        <span class="toggle-label">📐 Izmjera napravljena</span>
-        <div class="toggle" id="tog-izmjera" onclick="toggleField('izmjera_gotova')"></div>
-      </div>
-      <div class="toggle-row">
-        <span class="toggle-label">📦 Materijal naručen</span>
-        <div class="toggle" id="tog-materijal" onclick="toggleField('materijal_narucen')"></div>
-      </div>
-      <div class="toggle-row">
-        <span class="toggle-label">✅ Montaža gotova</span>
-        <div class="toggle" id="tog-montaza" onclick="toggleField('montaza_gotova')"></div>
-      </div>
+      <div class="toggle-row"><span class="toggle-label">📐 Izmjera napravljena</span><div class="toggle" id="tog-izmjera" onclick="toggleField('izmjera_gotova')"></div></div>
+      <div class="toggle-row"><span class="toggle-label">📦 Materijal naručen</span><div class="toggle" id="tog-materijal" onclick="toggleField('materijal_narucen')"></div></div>
+      <div class="toggle-row"><span class="toggle-label">✅ Montaža gotova</span><div class="toggle" id="tog-montaza" onclick="toggleField('montaza_gotova')"></div></div>
     </div>
     <div class="modal-section" id="dm-napomena-section" style="display:none">
       <div class="modal-section-title">Napomena</div>
       <div style="font-size:13px;line-height:1.6;color:var(--text)" id="dm-napomena"></div>
     </div>
     <div class="modal-actions">
-      <button class="btn-primary" onclick="saveAndClose()">Spremi promjene</button>
+      <button class="btn-primary" onclick="saveAndClose()">Spremi</button>
+      <button class="btn-danger" onclick="archiveJob()">Arhiviraj</button>
       <button class="btn-secondary" onclick="closeDetailDirect()">Zatvori</button>
     </div>
   </div>
@@ -628,6 +472,7 @@ select.form-input { cursor: pointer; }
       <div class="modal-subtitle">Unesite podatke o poslu</div>
     </div>
     <div class="modal-section">
+      <div class="prefill-hint" id="prefill-hint"></div>
       <div class="modal-section-title">Kupac</div>
       <div class="form-group"><label class="form-label">Ime i prezime *</label><input class="form-input" id="f-kupac" placeholder="npr. Horvat Ivan" type="text"></div>
       <div class="form-group"><label class="form-label">Adresa *</label><input class="form-input" id="f-adresa" placeholder="npr. Varaždin, Ul. Matice 12" type="text"></div>
@@ -663,441 +508,458 @@ select.form-input { cursor: pointer; }
   </div>
 </div>
 
-<div class="bottom-safe"></div>
-
 <script>
 // ── DATA ──────────────────────────────────────────────────────────────────
-const STORAGE_KEY = 'solworks_jobs_v1';
+const STORAGE_KEY = 'solworks_jobs_v2';
+const DAYS_HR = ['ned','pon','uto','sri','čet','pet','sub'];
+const DAYS_FULL = ['Nedjelja','Ponedjeljak','Utorak','Srijeda','Četvrtak','Petak','Subota'];
+const MONTHS_HR = ['siječanj','veljača','ožujak','travanj','svibanj','lipanj','srpanj','kolovoz','rujan','listopad','studeni','prosinac'];
+const MONTHS_SHORT = ['sij','velj','ožu','tra','svi','lip','srp','kol','ruj','lis','stu','pro'];
 
 const SAMPLE_JOBS = [
-  { id: 1, kupac: 'Horvat Ivan', adresa: 'Varaždin, Ul. Matice 12', tel: '091 234 5678',
-    iznos: 2400, status_placanja: 'Avans', avans: 500,
-    datum_izmjere: '2025-05-12', montaza_pocetak: '2025-05-19', montaza_kraj: '2025-05-21',
-    izmjera_gotova: true, materijal_narucen: true, montaza_gotova: false,
-    napomena: 'Kupac rekao 40m, izmjerom utvrđeno 38m', arhiva: false,
-    created: '2025-05-10' },
-  { id: 2, kupac: 'Kovač Marija', adresa: 'Ludbreg, Trg sv. Trojstva 5', tel: '098 765 4321',
-    iznos: 1850, status_placanja: 'Neplaćeno', avans: 0,
-    datum_izmjere: '2025-05-20', montaza_pocetak: '2025-05-26', montaza_kraj: '2025-05-27',
-    izmjera_gotova: false, materijal_narucen: false, montaza_gotova: false,
-    napomena: 'Na putu doma — izmjera utorak', arhiva: false,
-    created: '2025-05-14' },
-  { id: 3, kupac: 'Marković Stjepan', adresa: 'Čakovec, Frankopanska 3', tel: '095 111 2233',
-    iznos: 3200, status_placanja: 'Neplaćeno', avans: 0,
-    datum_izmjere: '2025-05-22', montaza_pocetak: '2025-05-26', montaza_kraj: '2025-05-28',
-    izmjera_gotova: false, materijal_narucen: false, montaza_gotova: false,
-    napomena: '⚠️ Provjeri overlap s Kovač', arhiva: false,
-    created: '2025-05-15' },
-  { id: 4, kupac: 'Petrić Ana', adresa: 'Ivanec, Kolodvorska 8', tel: '092 444 5566',
-    iznos: 980, status_placanja: 'Plaćeno', avans: 980,
-    datum_izmjere: '2025-05-15', montaza_pocetak: '2025-06-02', montaza_kraj: '2025-06-02',
-    izmjera_gotova: true, materijal_narucen: false, montaza_gotova: false,
-    napomena: 'Manja ograda, 1 dan posla', arhiva: false,
-    created: '2025-05-13' },
-  { id: 5, kupac: 'Novak Drago', adresa: 'Varaždinske Toplice', tel: '091 777 8899',
-    iznos: 4100, status_placanja: 'Plaćeno', avans: 4100,
-    datum_izmjere: '2025-05-05', montaza_pocetak: '2025-05-12', montaza_kraj: '2025-05-15',
-    izmjera_gotova: true, materijal_narucen: true, montaza_gotova: true,
-    napomena: 'Kasnilo 1 dan zbog kiše', arhiva: true,
-    created: '2025-05-01' },
+  { id:1, kupac:'Horvat Ivan', adresa:'Varaždin, Ul. Matice 12', tel:'091 234 5678', iznos:2400, status_placanja:'Avans', avans:500, datum_izmjere:'2025-05-12', montaza_pocetak:'2025-05-19', montaza_kraj:'2025-05-21', izmjera_gotova:true, materijal_narucen:true, montaza_gotova:false, napomena:'Kupac rekao 40m, izmjerom utvrđeno 38m', arhiva:false, created:'2025-05-10' },
+  { id:2, kupac:'Kovač Marija', adresa:'Ludbreg, Trg sv. Trojstva 5', tel:'098 765 4321', iznos:1850, status_placanja:'Neplaćeno', avans:0, datum_izmjere:'2025-05-20', montaza_pocetak:'2025-05-26', montaza_kraj:'2025-05-27', izmjera_gotova:false, materijal_narucen:false, montaza_gotova:false, napomena:'Na putu doma — izmjera utorak', arhiva:false, created:'2025-05-14' },
+  { id:3, kupac:'Marković Stjepan', adresa:'Čakovec, Frankopanska 3', tel:'095 111 2233', iznos:3200, status_placanja:'Neplaćeno', avans:0, datum_izmjere:'2025-05-22', montaza_pocetak:'2025-05-26', montaza_kraj:'2025-05-28', izmjera_gotova:false, materijal_narucen:false, montaza_gotova:false, napomena:'⚠️ Provjeri overlap s Kovač', arhiva:false, created:'2025-05-15' },
+  { id:4, kupac:'Petrić Ana', adresa:'Ivanec, Kolodvorska 8', tel:'092 444 5566', iznos:980, status_placanja:'Plaćeno', avans:980, datum_izmjere:'2025-05-15', montaza_pocetak:'2025-06-02', montaza_kraj:'2025-06-02', izmjera_gotova:true, materijal_narucen:false, montaza_gotova:false, napomena:'Manja ograda, 1 dan posla', arhiva:false, created:'2025-05-13' },
+  { id:5, kupac:'Novak Drago', adresa:'Varaždinske Toplice', tel:'091 777 8899', iznos:4100, status_placanja:'Plaćeno', avans:4100, datum_izmjere:'2025-05-05', montaza_pocetak:'2025-05-12', montaza_kraj:'2025-05-15', izmjera_gotova:true, materijal_narucen:true, montaza_gotova:true, napomena:'Kasnilo 1 dan zbog kiše', arhiva:true, created:'2025-05-01' },
 ];
 
 function loadJobs() {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) return JSON.parse(raw);
-  } catch(e) {}
+  try { const r = localStorage.getItem(STORAGE_KEY); if (r) return JSON.parse(r); } catch(e) {}
   localStorage.setItem(STORAGE_KEY, JSON.stringify(SAMPLE_JOBS));
-  return SAMPLE_JOBS;
+  return JSON.parse(JSON.stringify(SAMPLE_JOBS));
 }
-function saveJobs(jobs) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(jobs));
-}
+function saveJobs(j) { localStorage.setItem(STORAGE_KEY, JSON.stringify(j)); }
 function getJobs() { return loadJobs(); }
 
 // ── HELPERS ────────────────────────────────────────────────────────────────
+function parseDate(s) { return s ? new Date(s + 'T00:00:00') : null; }
+function isSameDay(a,b) { return a&&b && a.getFullYear()===b.getFullYear() && a.getMonth()===b.getMonth() && a.getDate()===b.getDate(); }
+function daysBetween(a,b) { return Math.round((b-a)/(864e5)); }
 function fmtDate(d) {
   if (!d) return '—';
-  const dt = new Date(d + 'T00:00:00');
-  return dt.toLocaleDateString('hr-HR', { day:'2-digit', month:'2-digit', year:'numeric' });
+  const dt = parseDate(d);
+  return dt.toLocaleDateString('hr-HR',{day:'2-digit',month:'2-digit',year:'numeric'});
 }
-function parseDate(s) { return s ? new Date(s + 'T00:00:00') : null; }
-function today() { return new Date(); }
-function isSameDay(a, b) {
-  return a.getFullYear()===b.getFullYear() && a.getMonth()===b.getMonth() && a.getDate()===b.getDate();
+function getMondayOf(d) {
+  const dt = new Date(d); dt.setHours(0,0,0,0);
+  const day = dt.getDay();
+  const diff = day === 0 ? -6 : 1 - day;
+  dt.setDate(dt.getDate() + diff);
+  return dt;
 }
-function daysBetween(a, b) { return Math.round((b-a)/(1000*60*60*24)); }
+function addDays(d, n) { const r = new Date(d); r.setDate(r.getDate()+n); return r; }
 
-function getPayBadge(status) {
-  if (status === 'Plaćeno') return '<span class="badge badge-green">Plaćeno ✓</span>';
-  if (status === 'Avans') return '<span class="badge badge-amber">Avans</span>';
-  return '<span class="badge badge-red">Neplaćeno</span>';
-}
-function getStatusBadge(job) {
-  if (job.montaza_gotova) return '<span class="badge badge-green">Gotovo</span>';
-  const mp = parseDate(job.montaza_pocetak);
-  const mk = parseDate(job.montaza_kraj);
-  const td = today();
-  if (mp && mk && mp <= td && td <= mk) return '<span class="badge badge-red">U montaži</span>';
-  if (job.izmjera_gotova && !job.materijal_narucen) return '<span class="badge badge-amber">Čeka mat.</span>';
-  if (!job.izmjera_gotova && job.datum_izmjere) return '<span class="badge badge-blue">Izmjera</span>';
-  return '<span class="badge badge-gray">Plan</span>';
-}
+// ── WEEK STATE ─────────────────────────────────────────────────────────────
+let currentWeekMonday = getMondayOf(new Date());
+// Min = 1 week back
+const MIN_MONDAY = getMondayOf(addDays(new Date(), -7));
+// Max = ~13 weeks forward (current week + 3 months)
+const MAX_MONDAY = getMondayOf(addDays(new Date(), 91));
 
-function detectOverlap(job, allJobs) {
-  if (!job.montaza_pocetak || !job.montaza_kraj || job.montaza_gotova) return null;
-  const s1 = parseDate(job.montaza_pocetak);
-  const e1 = parseDate(job.montaza_kraj);
-  const overlaps = allJobs.filter(j => {
-    if (j.id === job.id || j.arhiva || j.montaza_gotova || !j.montaza_pocetak || !j.montaza_kraj) return false;
-    const s2 = parseDate(j.montaza_pocetak);
-    const e2 = parseDate(j.montaza_kraj);
-    return s2 <= e1 && e2 >= s1;
-  });
-  return overlaps.length > 0 ? overlaps.map(j => j.kupac.split(' ')[0]).join(', ') : null;
-}
-
-// ── RENDER ACTIVE JOBS ─────────────────────────────────────────────────────
-function renderActive() {
+// ── AUTO-ARCHIVE: jobs whose montaza_kraj ended before last week's Monday ──
+function autoArchiveOld() {
   const jobs = getJobs();
-  const active = jobs.filter(j => !j.arhiva).sort((a,b) => {
-    // Sort: in progress first, then by montaza date
-    const ap = parseDate(a.montaza_pocetak);
-    const bp = parseDate(b.montaza_pocetak);
-    if (!ap && !bp) return 0;
-    if (!ap) return 1;
-    if (!bp) return -1;
-    return ap - bp;
+  let changed = false;
+  jobs.forEach(j => {
+    if (j.arhiva) return;
+    const mk = parseDate(j.montaza_kraj);
+    if (mk && mk < MIN_MONDAY) {
+      j.arhiva = true; changed = true;
+    }
   });
-
-  // Summaries
-  document.getElementById('cnt-aktivni').textContent = active.length;
-  document.getElementById('cnt-avans').textContent = active.filter(j => j.status_placanja === 'Avans').length;
-  document.getElementById('cnt-neplac').textContent = active.filter(j => j.status_placanja === 'Neplaćeno').length;
-  const td = today();
-  document.getElementById('cnt-izmjere').textContent = active.filter(j => {
-    const d = parseDate(j.datum_izmjere);
-    return d && !j.izmjera_gotova && d >= td;
-  }).length;
-  document.getElementById('active-count-label').textContent = `${active.length} poslova`;
-
-  const list = document.getElementById('active-jobs-list');
-  list.innerHTML = active.map(job => {
-    const overlap = detectOverlap(job, jobs);
-    const trajanje = (job.montaza_pocetak && job.montaza_kraj)
-      ? `${daysBetween(parseDate(job.montaza_pocetak), parseDate(job.montaza_kraj)) + 1} dan/a`
-      : '—';
-    return `
-    <div class="job-card ${overlap ? 'overlap' : ''}" onclick="openDetail(${job.id})">
-      <div class="job-card-top">
-        <div>
-          <div class="job-name">${job.kupac}</div>
-          <div class="job-addr">📍 ${job.adresa}</div>
-        </div>
-        <div class="job-badges">
-          ${getPayBadge(job.status_placanja)}
-          ${getStatusBadge(job)}
-        </div>
-      </div>
-      <div class="job-card-meta">
-        <div class="meta-cell">
-          <div class="meta-label">Izmjera</div>
-          <div class="meta-value ${job.izmjera_gotova ? 'ok' : 'no'}">${job.izmjera_gotova ? '✓ Gotova' : fmtDate(job.datum_izmjere)}</div>
-        </div>
-        <div class="meta-cell">
-          <div class="meta-label">Materijal</div>
-          <div class="meta-value ${job.materijal_narucen ? 'ok' : 'no'}">${job.materijal_narucen ? '✓ Naručen' : '✗ Nije'}</div>
-        </div>
-        <div class="meta-cell">
-          <div class="meta-label">Montaža</div>
-          <div class="meta-value">${job.montaza_pocetak ? fmtDate(job.montaza_pocetak) : '—'}</div>
-        </div>
-        <div class="meta-cell">
-          <div class="meta-label">Trajanje</div>
-          <div class="meta-value">${trajanje}</div>
-        </div>
-      </div>
-      ${overlap ? `<div class="overlap-banner">⚠️ Overlap s: ${overlap}</div>` : ''}
-    </div>`;
-  }).join('');
+  if (changed) saveJobs(jobs);
 }
 
-// ── RENDER CALENDAR ────────────────────────────────────────────────────────
+// ── RENDER CALENDAR WEEK ────────────────────────────────────────────────────
 function renderCalendar() {
-  const jobs = getJobs();
-  const active = jobs.filter(j => !j.arhiva);
+  autoArchiveOld();
+  const jobs = getJobs().filter(j => !j.arhiva);
+  const today = new Date(); today.setHours(0,0,0,0);
 
-  const startDate = new Date();
-  startDate.setDate(startDate.getDate() - startDate.getDay() + 1); // Monday
-  if (startDate > new Date()) startDate.setDate(startDate.getDate() - 7);
+  // Week days: Mon-Fri
+  const weekDays = [];
+  for (let i = 0; i < 5; i++) weekDays.push(addDays(currentWeekMonday, i));
 
-  const days = [];
-  for (let i = 0; i < 56; i++) {
-    const d = new Date(startDate);
-    d.setDate(d.getDate() + i);
-    days.push(d);
-  }
+  // Update nav
+  const monthStart = MONTHS_SHORT[weekDays[0].getMonth()];
+  const monthEnd   = MONTHS_SHORT[weekDays[4].getMonth()];
+  const monthLabel = weekDays[0].getMonth() === weekDays[4].getMonth()
+    ? MONTHS_HR[weekDays[0].getMonth()] + ' ' + weekDays[0].getFullYear()
+    : monthStart + '–' + monthEnd + ' ' + weekDays[4].getFullYear();
+  document.getElementById('week-label').textContent = monthLabel;
 
-  const MONTHS_HR = ['sij','velj','ožu','tra','svi','lip','srp','kol','ruj','lis','stu','pro'];
-  const DAYS_HR = ['ned','pon','uto','sri','čet','pet','sub'];
+  const wStart = weekDays[0].toLocaleDateString('hr-HR',{day:'2-digit',month:'2-digit'});
+  const wEnd   = weekDays[4].toLocaleDateString('hr-HR',{day:'2-digit',month:'2-digit'});
+  document.getElementById('week-sub').textContent = wStart + ' – ' + wEnd;
 
-  let html = '<table class="calendar-table"><thead><tr>';
-  html += '<th class="cal-label-col cal-head-month">Posao</th>';
+  const isCurrentWeek = isSameDay(currentWeekMonday, getMondayOf(new Date()));
+  document.getElementById('today-btn').style.display = isCurrentWeek ? 'none' : 'inline-block';
+  document.getElementById('btn-prev').disabled = currentWeekMonday <= MIN_MONDAY;
+  document.getElementById('btn-next').disabled = currentWeekMonday >= MAX_MONDAY;
 
-  // Month headers (merged)
-  let i = 0;
-  while (i < days.length) {
-    let j = i + 1;
-    while (j < days.length && days[j].getMonth() === days[i].getMonth()) j++;
-    const span = j - i;
-    html += `<th colspan="${span}" class="cal-month-cell">${MONTHS_HR[days[i].getMonth()].toUpperCase()} ${days[i].getFullYear()}</th>`;
-    i = j;
-  }
-  html += '</tr><tr><th class="cal-label-col" style="background:var(--surface2);border-right:2px solid var(--border);"></th>';
+  // Build calendar body
+  let html = '';
 
-  const td = today();
-  days.forEach(d => {
-    const isWknd = d.getDay() === 0 || d.getDay() === 6;
-    const isToday = isSameDay(d, td);
-    html += `<th class="cal-head-day ${isWknd?'weekend':''} ${isToday?'today':''}">
-      <span style="font-size:9px;display:block;opacity:0.7">${DAYS_HR[d.getDay()]}</span>
-      <span class="cal-head-num">${d.getDate()}</span>
-    </th>`;
+  // Day headers row
+  html += '<div class="cal-day-row">';
+  html += '<div class="cal-corner"></div>';
+  weekDays.forEach(d => {
+    const isToday = isSameDay(d, today);
+    const isPast = d < today && !isToday;
+    html += `<div class="cal-day-header ${isToday?'today':''} ${isPast?'past':''}" onclick="handleDayClick('${d.toISOString().split('T')[0]}')">
+      <div class="cal-day-name">${DAYS_HR[d.getDay()]}</div>
+      <div class="cal-day-num">${d.getDate()}</div>
+    </div>`;
   });
-  html += '</tr></thead><tbody>';
+  html += '</div>';
 
-  // Job rows
-  active.forEach(job => {
-    const mp = parseDate(job.montaza_pocetak);
-    const mk = parseDate(job.montaza_kraj);
-    const izm = parseDate(job.datum_izmjere);
-    const totalDays = (mp && mk) ? daysBetween(mp, mk) + 1 : 0;
+  // Jobs grid
+  html += '<div class="cal-grid">';
+  html += '<div></div>'; // empty corner
 
-    html += `<tr onclick="openDetail(${job.id})" style="cursor:pointer">
-      <td class="cal-row-label" style="display:table-cell;vertical-align:middle">
-        <div class="cal-label-name">${job.kupac}</div>
-        <div class="cal-label-sub">${job.adresa.split(',')[0]}</div>
-      </td>`;
+  weekDays.forEach(d => {
+    const isPast = d < today && !isSameDay(d, today);
+    const dateStr = d.toISOString().split('T')[0];
 
-    days.forEach(d => {
-      const isWknd = d.getDay() === 0 || d.getDay() === 6;
-      const isToday = isSameDay(d, td);
+    // Find jobs active on this day
+    const dayJobs = jobs.filter(j => {
+      const mp = parseDate(j.montaza_pocetak);
+      const mk = parseDate(j.montaza_kraj);
+      const izm = parseDate(j.datum_izmjere);
       const inMont = mp && mk && d >= mp && d <= mk;
-      const isIzm = izm && isSameDay(d, izm);
-
-      let cellContent = '';
-      if (inMont && job.montaza_gotova) {
-        cellContent = `<div class="cal-block-gotovo">✓</div>`;
-      } else if (inMont) {
-        const dayNum = daysBetween(mp, d) + 1;
-        cellContent = `<div class="cal-block-montaza">${dayNum}/${totalDays}</div>`;
-      } else if (isIzm) {
-        cellContent = `<div class="cal-block-izmjera">📐</div>`;
-      }
-
-      html += `<td class="cal-cell ${isWknd?'weekend':''} ${isToday?'today-col':''}">${cellContent}</td>`;
+      const isIzm = izm && isSameDay(izm, d);
+      return inMont || isIzm;
     });
-    html += '</tr>';
+
+    html += '<div class="cal-grid-col">';
+
+    if (dayJobs.length === 0) {
+      html += `<div class="cal-empty-col ${isPast?'past':''}" onclick="handleEmptyClick('${dateStr}')">
+        <span class="cal-empty-plus">${isPast ? '' : '+'}</span>
+      </div>`;
+    } else {
+      dayJobs.forEach(j => {
+        const mp = parseDate(j.montaza_pocetak);
+        const mk = parseDate(j.montaza_kraj);
+        const izm = parseDate(j.datum_izmjere);
+        const inMont = mp && mk && d >= mp && d <= mk;
+        const isIzmjera = izm && isSameDay(izm, d) && !inMont;
+
+        let pillClass = inMont
+          ? (j.montaza_gotova ? 'job-pill-gotovo' : 'job-pill-montaza')
+          : 'job-pill-izmjera';
+
+        let sub = '';
+        if (inMont && !j.montaza_gotova) {
+          const dayNum = daysBetween(mp, d) + 1;
+          const total = daysBetween(mp, mk) + 1;
+          sub = `Dan ${dayNum}/${total}`;
+        } else if (inMont && j.montaza_gotova) {
+          sub = '✓ Gotovo';
+        } else {
+          sub = '📐 Izmjera';
+        }
+
+        // Check overlap
+        const hasOverlap = inMont && !j.montaza_gotova && jobs.some(other => {
+          if (other.id === j.id || other.montaza_gotova) return false;
+          const op = parseDate(other.montaza_pocetak);
+          const ok = parseDate(other.montaza_kraj);
+          return op && ok && op <= mk && ok >= mp;
+        });
+
+        const lastName = j.kupac.split(' ').slice(-1)[0];
+
+        html += `<div class="job-pill ${pillClass}" onclick="openDetail(${j.id})">
+          ${hasOverlap ? '<div class="overlap-dot"></div>' : ''}
+          <div class="job-pill-name">${lastName}</div>
+          <div class="job-pill-sub">${sub}</div>
+        </div>`;
+      });
+
+      // Add extra "+" only if not past
+      if (!isPast) {
+        html += `<div class="cal-empty-col" style="min-height:28px;margin-top:2px" onclick="handleEmptyClick('${dateStr}')">
+          <span class="cal-empty-plus" style="font-size:14px">+</span>
+        </div>`;
+      }
+    }
+
+    html += '</div>';
   });
+  html += '</div>'; // cal-grid
 
   // Izmjere summary row
-  html += `<tr><td class="cal-row-label cal-row-izmjere" style="display:table-cell;vertical-align:middle">
-    <div class="cal-label-name" style="color:var(--accent2)">📐 Izmjere</div>
-    <div class="cal-label-sub">sve toga dana</div>
-  </td>`;
-  days.forEach(d => {
-    const izmOnDay = active.filter(j => {
+  html += '<div class="izmjere-row-wrap"><div class="izmjere-row-head">📐 Izmjere ovog tjedna</div><div class="izmjere-row-grid"><div></div>';
+  weekDays.forEach(d => {
+    const izmOnDay = jobs.filter(j => {
       const izm = parseDate(j.datum_izmjere);
       return izm && isSameDay(izm, d);
     });
-    const isWknd = d.getDay() === 0 || d.getDay() === 6;
     if (izmOnDay.length > 0) {
-      const names = izmOnDay.map(j => j.kupac.split(' ')[0]).join(', ');
-      html += `<td class="cal-cell cal-izmjera-cell">${names}</td>`;
+      const names = izmOnDay.map(j => j.kupac.split(' ').slice(-1)[0]).join(', ');
+      html += `<div class="izmjere-day-cell" onclick="${izmOnDay.map(j=>`openDetail(${j.id})`).join(';')}">${names}</div>`;
     } else {
-      html += `<td class="cal-cell ${isWknd?'weekend':''}"></td>`;
+      html += '<div class="izmjere-day-cell empty"></div>';
     }
   });
-  html += '</tr>';
+  html += '</div></div>';
 
-  // Overlap row
-  html += `<tr><td class="cal-row-label cal-row-overlap" style="display:table-cell;vertical-align:middle">
-    <div class="cal-label-name" style="color:var(--red)">⚠️ Overlap</div>
-    <div class="cal-label-sub">višestruka montaža</div>
-  </td>`;
-  days.forEach(d => {
-    const inMont = active.filter(j => {
+  // Overlap row (only if there are overlaps this week)
+  const hasAnyOverlap = weekDays.some(d => {
+    const montOnDay = jobs.filter(j => {
       const mp = parseDate(j.montaza_pocetak);
       const mk = parseDate(j.montaza_kraj);
       return mp && mk && d >= mp && d <= mk && !j.montaza_gotova;
     });
-    const isWknd = d.getDay() === 0 || d.getDay() === 6;
-    if (inMont.length > 1) {
-      html += `<td class="cal-cell cal-overlap-cell">⚠️</td>`;
+    return montOnDay.length > 1;
+  });
+
+  html += `<div class="overlap-row-wrap ${hasAnyOverlap?'visible':''}">
+    <div class="overlap-row-head">⚠️ Preklapanje montaža</div>
+    <div class="overlap-row-grid"><div></div>`;
+  weekDays.forEach(d => {
+    const montOnDay = jobs.filter(j => {
+      const mp = parseDate(j.montaza_pocetak);
+      const mk = parseDate(j.montaza_kraj);
+      return mp && mk && d >= mp && d <= mk && !j.montaza_gotova;
+    });
+    if (montOnDay.length > 1) {
+      const names = montOnDay.map(j => j.kupac.split(' ').slice(-1)[0]).join(' + ');
+      html += `<div class="overlap-day-cell has-overlap" title="${names}">⚠️</div>`;
     } else {
-      html += `<td class="cal-cell ${isWknd?'weekend':''}"></td>`;
+      html += '<div class="overlap-day-cell"></div>';
     }
   });
-  html += '</tr></tbody></table>';
+  html += '</div></div>';
 
-  document.getElementById('calendar-wrap').innerHTML = html;
+  document.getElementById('cal-week-body').innerHTML = html;
+}
 
-  // Scroll to today
-  setTimeout(() => {
-    const wrap = document.getElementById('calendar-wrap');
-    const todayIdx = days.findIndex(d => isSameDay(d, td));
-    if (todayIdx > 0) {
-      const labelWidth = 140;
-      const dayWidth = 48;
-      wrap.scrollLeft = Math.max(0, labelWidth + (todayIdx - 1) * dayWidth - 60);
-    }
-  }, 50);
+// ── WEEK NAVIGATION ────────────────────────────────────────────────────────
+function prevWeek() {
+  const prev = addDays(currentWeekMonday, -7);
+  if (prev >= MIN_MONDAY) { currentWeekMonday = prev; renderCalendar(); }
+}
+function nextWeek() {
+  const next = addDays(currentWeekMonday, 7);
+  if (next <= MAX_MONDAY) { currentWeekMonday = next; renderCalendar(); }
+}
+function goToCurrentWeek() {
+  currentWeekMonday = getMondayOf(new Date());
+  renderCalendar();
+}
+
+// ── CLICK HANDLERS ─────────────────────────────────────────────────────────
+let prefillDate = null;
+
+function handleDayClick(dateStr) {
+  // Click on day header = open add with that date prefilled
+  openAddModal(dateStr);
+}
+function handleEmptyClick(dateStr) {
+  const d = parseDate(dateStr);
+  const today = new Date(); today.setHours(0,0,0,0);
+  if (d < today) return; // past = no action
+  openAddModal(dateStr);
+}
+
+// ── RENDER ACTIVE LIST ─────────────────────────────────────────────────────
+function renderActive() {
+  autoArchiveOld();
+  const jobs = getJobs();
+  const active = jobs.filter(j => !j.arhiva).sort((a,b) => {
+    const ap = parseDate(a.montaza_pocetak), bp = parseDate(b.montaza_pocetak);
+    if (!ap && !bp) return 0; if (!ap) return 1; if (!bp) return -1;
+    return ap - bp;
+  });
+
+  document.getElementById('cnt-aktivni').textContent = active.length;
+  document.getElementById('cnt-avans').textContent = active.filter(j=>j.status_placanja==='Avans').length;
+  document.getElementById('cnt-neplac').textContent = active.filter(j=>j.status_placanja==='Neplaćeno').length;
+  const td = new Date();
+  document.getElementById('cnt-izmjere').textContent = active.filter(j=>{
+    const d=parseDate(j.datum_izmjere); return d&&!j.izmjera_gotova&&d>=td;
+  }).length;
+  document.getElementById('active-count-label').textContent = `${active.length} poslova`;
+
+  document.getElementById('active-jobs-list').innerHTML = active.map(job => {
+    const overlap = detectOverlap(job, jobs);
+    const traj = (job.montaza_pocetak&&job.montaza_kraj)
+      ? daysBetween(parseDate(job.montaza_pocetak),parseDate(job.montaza_kraj))+1+' dan/a' : '—';
+    return `<div class="job-card ${overlap?'overlap':''}" onclick="openDetail(${job.id})">
+      <div class="job-card-top">
+        <div><div class="job-name">${job.kupac}</div><div class="job-addr">📍 ${job.adresa}</div></div>
+        <div class="job-badges">${getPayBadge(job.status_placanja)}${getStatusBadge(job)}</div>
+      </div>
+      <div class="job-card-meta">
+        <div class="meta-cell"><div class="meta-label">Izmjera</div><div class="meta-value ${job.izmjera_gotova?'ok':'no'}">${job.izmjera_gotova?'✓ Gotova':fmtDate(job.datum_izmjere)}</div></div>
+        <div class="meta-cell"><div class="meta-label">Materijal</div><div class="meta-value ${job.materijal_narucen?'ok':'no'}">${job.materijal_narucen?'✓ Naručen':'✗ Nije'}</div></div>
+        <div class="meta-cell"><div class="meta-label">Montaža</div><div class="meta-value">${job.montaza_pocetak?fmtDate(job.montaza_pocetak):'—'}</div></div>
+        <div class="meta-cell"><div class="meta-label">Trajanje</div><div class="meta-value">${traj}</div></div>
+      </div>
+      ${overlap?`<div class="overlap-banner">⚠️ Overlap s: ${overlap}</div>`:''}
+    </div>`;
+  }).join('');
 }
 
 // ── RENDER ARCHIVE ─────────────────────────────────────────────────────────
 function renderArchive() {
-  const jobs = getJobs().filter(j => j.arhiva).sort((a,b) => {
-    return (parseDate(b.montaza_kraj) || 0) - (parseDate(a.montaza_kraj) || 0);
-  });
+  const jobs = getJobs().filter(j=>j.arhiva).sort((a,b)=>(parseDate(b.montaza_kraj)||0)-(parseDate(a.montaza_kraj)||0));
   document.getElementById('archive-count-label').textContent = `${jobs.length} poslova`;
-  document.getElementById('archive-list').innerHTML = jobs.map(j => `
+  document.getElementById('archive-list').innerHTML = jobs.map(j=>`
     <div class="archive-card" onclick="openDetail(${j.id})">
-      <div class="archive-card-left">
-        <div class="archive-name">${j.kupac}</div>
-        <div class="archive-date">📍 ${j.adresa} &nbsp;·&nbsp; Završeno: ${fmtDate(j.montaza_kraj)}</div>
-      </div>
-      <div class="archive-iznos">${j.iznos ? j.iznos.toLocaleString('hr-HR') + ' €' : '—'}</div>
+      <div><div class="archive-name">${j.kupac}</div><div class="archive-date">📍 ${j.adresa} · ${fmtDate(j.montaza_kraj)}</div></div>
+      <div class="archive-iznos">${j.iznos?j.iznos.toLocaleString('hr-HR')+' €':'—'}</div>
     </div>`).join('');
+}
+
+// ── HELPERS ────────────────────────────────────────────────────────────────
+function getPayBadge(s) {
+  if (s==='Plaćeno') return '<span class="badge badge-green">Plaćeno ✓</span>';
+  if (s==='Avans') return '<span class="badge badge-amber">Avans</span>';
+  return '<span class="badge badge-red">Neplaćeno</span>';
+}
+function getStatusBadge(job) {
+  if (job.montaza_gotova) return '<span class="badge badge-green">Gotovo</span>';
+  const mp=parseDate(job.montaza_pocetak), mk=parseDate(job.montaza_kraj), td=new Date();
+  if (mp&&mk&&mp<=td&&td<=mk) return '<span class="badge badge-red">U montaži</span>';
+  if (job.izmjera_gotova&&!job.materijal_narucen) return '<span class="badge badge-amber">Čeka mat.</span>';
+  if (!job.izmjera_gotova&&job.datum_izmjere) return '<span class="badge badge-blue">Izmjera</span>';
+  return '<span class="badge badge-gray">Plan</span>';
+}
+function detectOverlap(job, allJobs) {
+  if (!job.montaza_pocetak||!job.montaza_kraj||job.montaza_gotova) return null;
+  const s1=parseDate(job.montaza_pocetak), e1=parseDate(job.montaza_kraj);
+  const ov = allJobs.filter(j=>{
+    if (j.id===job.id||j.arhiva||j.montaza_gotova||!j.montaza_pocetak||!j.montaza_kraj) return false;
+    const s2=parseDate(j.montaza_pocetak), e2=parseDate(j.montaza_kraj);
+    return s2<=e1&&e2>=s1;
+  });
+  return ov.length>0 ? ov.map(j=>j.kupac.split(' ').slice(-1)[0]).join(', ') : null;
 }
 
 // ── TABS ───────────────────────────────────────────────────────────────────
 function switchTab(tab) {
-  document.querySelectorAll('.tab').forEach((t,i) => {
-    const tabs = ['aktivni','kalendar','arhiva'];
-    t.classList.toggle('active', tabs[i] === tab);
+  document.querySelectorAll('.tab').forEach((t,i)=>{
+    t.classList.toggle('active', ['aktivni','kalendar','arhiva'][i]===tab);
   });
-  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-  document.getElementById('view-' + tab).classList.add('active');
-  if (tab === 'kalendar') renderCalendar();
-  if (tab === 'arhiva') renderArchive();
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.getElementById('view-'+tab).classList.add('active');
+  if (tab==='aktivni') renderActive();
+  if (tab==='kalendar') renderCalendar();
+  if (tab==='arhiva') renderArchive();
 }
 
 // ── DETAIL MODAL ───────────────────────────────────────────────────────────
 let currentJobId = null;
-let pendingChanges = {};
 
 function openDetail(id) {
-  const job = getJobs().find(j => j.id === id);
+  const job = getJobs().find(j=>j.id===id);
   if (!job) return;
   currentJobId = id;
-  pendingChanges = {};
-
   document.getElementById('dm-title').textContent = job.kupac;
-  document.getElementById('dm-subtitle').textContent = '📍 ' + job.adresa;
-  document.getElementById('dm-tel').textContent = job.tel || '—';
-  document.getElementById('dm-iznos').textContent = job.iznos ? job.iznos.toLocaleString('hr-HR') + ' €' : '—';
+  document.getElementById('dm-subtitle').textContent = '📍 '+job.adresa;
+  document.getElementById('dm-tel').textContent = job.tel||'—';
+  document.getElementById('dm-iznos').textContent = job.iznos?job.iznos.toLocaleString('hr-HR')+' €':'—';
   document.getElementById('dm-plac').textContent = job.status_placanja;
-  document.getElementById('dm-avans').textContent = job.avans ? job.avans.toLocaleString('hr-HR') + ' €' : '—';
+  document.getElementById('dm-avans').textContent = job.avans?job.avans.toLocaleString('hr-HR')+' €':'—';
   document.getElementById('dm-izm-dat').textContent = fmtDate(job.datum_izmjere);
   document.getElementById('dm-mont-poc').textContent = fmtDate(job.montaza_pocetak);
   document.getElementById('dm-mont-kraj').textContent = fmtDate(job.montaza_kraj);
-  const traj = (job.montaza_pocetak && job.montaza_kraj)
-    ? daysBetween(parseDate(job.montaza_pocetak), parseDate(job.montaza_kraj)) + 1 + ' dan/a'
-    : '—';
+  const traj=(job.montaza_pocetak&&job.montaza_kraj)?daysBetween(parseDate(job.montaza_pocetak),parseDate(job.montaza_kraj))+1+' dan/a':'—';
   document.getElementById('dm-trajanje').textContent = traj;
-
-  setToggle('tog-izmjera', job.izmjera_gotova);
-  setToggle('tog-materijal', job.materijal_narucen);
-  setToggle('tog-montaza', job.montaza_gotova);
-
+  document.getElementById('tog-izmjera').classList.toggle('on', !!job.izmjera_gotova);
+  document.getElementById('tog-materijal').classList.toggle('on', !!job.materijal_narucen);
+  document.getElementById('tog-montaza').classList.toggle('on', !!job.montaza_gotova);
   const napSec = document.getElementById('dm-napomena-section');
-  if (job.napomena) {
-    napSec.style.display = '';
-    document.getElementById('dm-napomena').textContent = job.napomena;
-  } else {
-    napSec.style.display = 'none';
-  }
-
+  if (job.napomena) { napSec.style.display=''; document.getElementById('dm-napomena').textContent=job.napomena; }
+  else napSec.style.display='none';
   document.getElementById('detail-modal').classList.add('open');
 }
 
-function setToggle(id, val) {
-  document.getElementById(id).classList.toggle('on', !!val);
-}
-
 function toggleField(field) {
-  const togMap = { izmjera_gotova: 'tog-izmjera', materijal_narucen: 'tog-materijal', montaza_gotova: 'tog-montaza' };
+  const map = {izmjera_gotova:'tog-izmjera', materijal_narucen:'tog-materijal', montaza_gotova:'tog-montaza'};
   const jobs = getJobs();
-  const job = jobs.find(j => j.id === currentJobId);
+  const job = jobs.find(j=>j.id===currentJobId);
   if (!job) return;
-  const newVal = !job[field];
-  job[field] = newVal;
-  pendingChanges[field] = newVal;
-  setToggle(togMap[field], newVal);
-  // If montaza gotova, ask to archive
-  if (field === 'montaza_gotova' && newVal && job.status_placanja === 'Plaćeno') {
-    job.arhiva = true;
-  }
+  job[field] = !job[field];
+  document.getElementById(map[field]).classList.toggle('on', job[field]);
   saveJobs(jobs);
 }
 
-function saveAndClose() {
-  renderActive();
+function archiveJob() {
+  if (!confirm('Arhivirati ovaj posao?')) return;
+  const jobs = getJobs();
+  const job = jobs.find(j=>j.id===currentJobId);
+  if (job) { job.arhiva = true; saveJobs(jobs); }
   closeDetailDirect();
 }
 
-function closeDetail(e) {
-  if (e.target === document.getElementById('detail-modal')) closeDetailDirect();
-}
+function saveAndClose() { closeDetailDirect(); }
+function closeDetail(e) { if (e.target===document.getElementById('detail-modal')) closeDetailDirect(); }
 function closeDetailDirect() {
   document.getElementById('detail-modal').classList.remove('open');
-  renderActive();
+  renderCalendar();
 }
 
 // ── ADD MODAL ──────────────────────────────────────────────────────────────
-function openAddModal() {
+function openAddModal(prefillDateStr) {
+  prefillDate = prefillDateStr || null;
+  const hint = document.getElementById('prefill-hint');
+  if (prefillDate) {
+    const d = parseDate(prefillDate);
+    const label = d.toLocaleDateString('hr-HR',{weekday:'long',day:'numeric',month:'long'});
+    hint.textContent = '📅 Dodaješ posao za ' + label;
+    hint.classList.add('visible');
+    document.getElementById('f-mont-poc').value = prefillDate;
+  } else {
+    hint.classList.remove('visible');
+    document.getElementById('f-mont-poc').value = '';
+  }
   document.getElementById('add-modal').classList.add('open');
 }
+
 function closeAddModal(e) {
-  if (!e || e.target === document.getElementById('add-modal')) {
+  if (!e || e.target===document.getElementById('add-modal')) {
     document.getElementById('add-modal').classList.remove('open');
-    ['f-kupac','f-adresa','f-tel','f-iznos','f-avans','f-izm','f-mont-poc','f-mont-kraj','f-napomena'].forEach(id => {
-      document.getElementById(id).value = '';
+    ['f-kupac','f-adresa','f-tel','f-iznos','f-avans','f-izm','f-mont-poc','f-mont-kraj','f-napomena'].forEach(id=>{
+      document.getElementById(id).value='';
     });
-    document.getElementById('f-plac').value = 'Neplaćeno';
+    document.getElementById('f-plac').value='Neplaćeno';
+    document.getElementById('prefill-hint').classList.remove('visible');
+    prefillDate = null;
   }
 }
 
 function addJob() {
   const kupac = document.getElementById('f-kupac').value.trim();
   const adresa = document.getElementById('f-adresa').value.trim();
-  if (!kupac || !adresa) { alert('Unesite ime kupca i adresu.'); return; }
-
+  if (!kupac||!adresa) { alert('Unesite ime kupca i adresu.'); return; }
   const jobs = getJobs();
-  const newId = Math.max(0, ...jobs.map(j => j.id)) + 1;
-  const newJob = {
-    id: newId,
-    kupac, adresa,
+  const newId = Math.max(0,...jobs.map(j=>j.id))+1;
+  jobs.unshift({
+    id:newId, kupac, adresa,
     tel: document.getElementById('f-tel').value.trim(),
-    iznos: parseFloat(document.getElementById('f-iznos').value) || 0,
+    iznos: parseFloat(document.getElementById('f-iznos').value)||0,
     status_placanja: document.getElementById('f-plac').value,
-    avans: parseFloat(document.getElementById('f-avans').value) || 0,
-    datum_izmjere: document.getElementById('f-izm').value || null,
-    montaza_pocetak: document.getElementById('f-mont-poc').value || null,
-    montaza_kraj: document.getElementById('f-mont-kraj').value || null,
-    izmjera_gotova: false, materijal_narucen: false, montaza_gotova: false,
+    avans: parseFloat(document.getElementById('f-avans').value)||0,
+    datum_izmjere: document.getElementById('f-izm').value||null,
+    montaza_pocetak: document.getElementById('f-mont-poc').value||null,
+    montaza_kraj: document.getElementById('f-mont-kraj').value||null,
+    izmjera_gotova:false, materijal_narucen:false, montaza_gotova:false,
     napomena: document.getElementById('f-napomena').value.trim(),
-    arhiva: false,
+    arhiva:false,
     created: new Date().toISOString().split('T')[0]
-  };
-  jobs.unshift(newJob);
+  });
   saveJobs(jobs);
   closeAddModal();
-  renderActive();
+  renderCalendar();
 }
 
 // ── INIT ───────────────────────────────────────────────────────────────────
-renderActive();
+renderCalendar();
 </script>
 </body>
 </html>

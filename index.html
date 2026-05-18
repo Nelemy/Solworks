@@ -1192,7 +1192,7 @@ function renderMobileCalendar() {
   if (dayJobs.length === 0) {
     bodyEl.innerHTML = isPast
       ? '<div class="mobile-day-empty" style="cursor:default">Nema poslova ovaj dan</div>'
-      : '<div class="mobile-day-empty" onclick="handleEmptyClick('' + mobileSelectedDay + '')">+ Dodaj posao za ovaj dan</div>';
+      : '<div class="mobile-day-empty" data-date="\' + mobileSelectedDay + \'" onclick="handleEmptyClick(this.dataset.date)">+ Dodaj posao za ovaj dan</div>';
     return;
   }
 
@@ -1251,7 +1251,7 @@ function renderMobileCalendar() {
       + '</div>'
       + '</div>';
   }).join('')
-    + (isPast ? '' : '<div class="mobile-day-empty" onclick="handleEmptyClick('' + mobileSelectedDay + '')" style="margin-top:4px">+ Dodaj posao</div>');
+    + (isPast ? '' : '<div class="mobile-day-empty" data-date="\' + mobileSelectedDay + \'" onclick="handleEmptyClick(this.dataset.date)" style="margin-top:4px">+ Dodaj posao</div>');
 }
 
 function selectMobileDay(dateStr) {

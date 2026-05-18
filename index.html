@@ -1160,7 +1160,7 @@ function renderMobileCalendar() {
     const dot = dayJobs.length > 0
       ? '<div style="width:5px;height:5px;border-radius:50%;background:' + (isActive ? '#0f1117' : 'var(--accent)') + ';margin:3px auto 0"></div>'
       : '<div style="height:8px"></div>';
-    return '<div class="mobile-day-pill' + (isActive ? ' active' : '') + (isToday && !isActive ? ' today-pill' : '') + '" onclick="selectMobileDay('' + ds + '')">'
+    return '<div class="mobile-day-pill' + (isActive ? ' active' : '') + (isToday && !isActive ? ' today-pill' : '') + '" data-ds="' + ds + '" onclick="selectMobileDay(this.dataset.ds)">'
       + '<div class="pill-name">' + DAYS_HR[d.getDay()] + '</div>'
       + '<div class="pill-num">' + d.getDate() + '</div>'
       + dot

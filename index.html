@@ -1061,7 +1061,8 @@ function renderMonth() {
   // Day-of-week headers
   html += '<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-bottom:4px;">';
   ['Pon','Uto','Sri','Čet','Pet','Sub','Ned'].forEach((d,i) => {
-    html += `<div style="text-align:center;font-size:12px;font-weight:600;color:${i>=5?'var(--red)':'var(--muted)'};padding:6px 2px;text-transform:uppercase;letter-spacing:0.5px">${d}</div>`;
+    const dowColor = i >= 5 ? 'var(--red)' : 'var(--muted)';
+    html += '<div style="text-align:center;font-size:12px;font-weight:600;color:' + dowColor + ';padding:6px 2px;text-transform:uppercase;letter-spacing:0.5px">' + d + '</div>';
   });
   html += '</div>';
 
@@ -1112,30 +1113,33 @@ function renderMonth() {
     const bgColor = isToday ? 'rgba(232,160,39,0.08)' : isWeekend ? 'rgba(255,255,255,0.02)' : 'var(--surface)';
     const borderColor = isToday ? 'rgba(232,160,39,0.5)' : hasOverlap ? 'rgba(232,80,58,0.5)' : 'var(--border)';
 
-    html += `<div style="min-height:80px;background:${bgColor};border:1px solid ${borderColor};border-radius:8px;padding:4px;cursor:${isPast?'default':'pointer'}" onclick="${isPast?'':'handleEmptyClick(''+dateStr+'')'}">`;
+    const dayOnclick = isPast ? '' : 'handleEmptyClick(\''+dateStr+'\')';
+    const dayCursor = isPast ? 'default' : 'pointer';
+    const dayNumColor = isToday ? 'var(--accent)' : isWeekend ? 'var(--red)' : 'var(--text)';
+    html += '<div style="min-height:80px;background:' + bgColor + ';border:1px solid ' + borderColor + ';border-radius:8px;padding:4px;cursor:' + dayCursor + '" onclick="' + (isPast ? '' : 'handleEmptyClick(\'' + dateStr + '\')') + '">';
 
     // Day number
-    html += `<div style="font-family:var(--font-display);font-size:14px;font-weight:700;color:${isToday?'var(--accent)':isWeekend?'var(--red)':'var(--text)'};margin-bottom:3px;line-height:1">${day}</div>`;
+    html += '<div style="font-family:var(--font-display);font-size:14px;font-weight:700;color:' + dayNumColor + ';margin-bottom:3px;line-height:1">' + day + '</div>';
 
     // Job blocks
     dayJobs.forEach(j => {
       const mp = parseDate(j.montaza_pocetak);
       const mk = parseDate(j.montaza_kraj);
       const izm = parseDate(j.datum_izmjere);
-      const inMont = mp && mk && d >= mp && d <= mk;
+      const inMont = mp && (mk ? (d >= mp && d <= mk) : isSameDay(d, mp));
       const isIzmjera = izm && isSameDay(izm, d) && !inMont;
 
       let bg, border, timeStr, typeIcon;
       if (inMont && j.montaza_gotova) {
         bg='rgba(58,184,122,0.15)'; border='rgba(58,184,122,0.4)';
         const dayNum = daysBetween(mp,d)+1, total=daysBetween(mp,mk)+1;
-        timeStr = `✓ Dan ${dayNum}/${total}`;
+        timeStr = '✓ Dan ' + dayNum + '/' + total;
         typeIcon = '🔧';
       } else if (inMont) {
         bg='rgba(232,80,58,0.15)'; border='rgba(232,80,58,0.4)';
         const dayNum = daysBetween(mp,d)+1, total=daysBetween(mp,mk)+1;
         const t = j.montaza_pocetak_vrijeme ? j.montaza_pocetak_vrijeme : '';
-        timeStr = `${t ? t+' · ' : ''}Dan ${dayNum}/${total}`;
+        timeStr = (t ? t + ' · ' : '') + 'Dan ' + dayNum + '/' + total;
         typeIcon = '🔧';
       } else {
         bg='rgba(61,126,255,0.15)'; border='rgba(61,126,255,0.4)';
@@ -1155,11 +1159,9 @@ function renderMonth() {
             + '</div>';
     });
 
-    // + add button if not past and no jobs, or after jobs
-    if (!isPast) {
-      if (dayJobs.length === 0) {
-        html += `<div style="text-align:center;color:var(--border);font-size:16px;margin-top:8px">+</div>`;
-      }
+    // + add button if not past and no jobs
+    if (!isPast && dayJobs.length === 0) {
+      html += '<div style="text-align:center;color:var(--border);font-size:16px;margin-top:8px">+</div>';
     }
 
     html += '</div>';

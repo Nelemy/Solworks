@@ -1579,6 +1579,7 @@ function goToCurrentMonth() {
 function renderMonth() {
   const jobs = getJobs().filter(j => !j.arhiva);
   const today = new Date(); today.setHours(0,0,0,0);
+  const mobile = isMobile();
 
   const isCurrentMonth = currentMonth === today.getMonth() && currentMonthYear === today.getFullYear();
   document.getElementById('month-label').textContent = MONTHS_HR[currentMonth].charAt(0).toUpperCase() + MONTHS_HR[currentMonth].slice(1) + ' ' + currentMonthYear;
@@ -1590,7 +1591,7 @@ function renderMonth() {
   let startDow = firstDay.getDay();
   startDow = startDow === 0 ? 6 : startDow - 1;
 
-  // ── Pre-calculate jobs per day to find busiest day ──
+  // Pre-calculate jobs per day
   const jobsPerDay = {};
   for (let day = 1; day <= daysInMonth; day++) {
     const d = new Date(currentMonthYear, currentMonth, day);
@@ -1603,28 +1604,24 @@ function renderMonth() {
     });
   }
   const maxJobs = Math.max(1, ...Object.values(jobsPerDay).map(j => j.length));
-
-  // Density mode based on busiest day:
-  // 1-2: full (name + addr + time)
-  // 3:   medium (name + time, no addr)
-  // 4+:  compact (name only, show "+N more" if >3 visible)
   const density = maxJobs <= 2 ? 'full' : maxJobs === 3 ? 'medium' : 'compact';
-  const SHOW_MAX = density === 'compact' ? 3 : 99;
+  const SHOW_MAX = mobile ? 2 : (density === 'compact' ? 3 : 99);
 
   let html = '';
 
   // Day-of-week headers
-  html += '<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-bottom:4px;">';
-  ['Pon','Uto','Sri','Čet','Pet','Sub','Ned'].forEach((d,i) => {
-    const dowColor = i >= 5 ? 'var(--red)' : 'var(--muted)';
-    html += '<div style="text-align:center;font-size:12px;font-weight:600;color:' + dowColor + ';padding:6px 2px;text-transform:uppercase;letter-spacing:0.5px">' + d + '</div>';
+  const dowLabels = mobile ? ['P','U','S','Č','P','S','N'] : ['Pon','Uto','Sri','Čet','Pet','Sub','Ned'];
+  html += '<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:' + (mobile?'2px':'3px') + ';margin-bottom:' + (mobile?'3px':'4px') + ';">';
+  dowLabels.forEach((d,i) => {
+    const c = i >= 5 ? 'var(--red)' : 'var(--muted)';
+    html += '<div style="text-align:center;font-size:' + (mobile?'11px':'12px') + ';font-weight:600;color:' + c + ';padding:' + (mobile?'4px 1px':'6px 2px') + ';text-transform:uppercase;letter-spacing:0.3px">' + d + '</div>';
   });
   html += '</div>';
 
-  // Min cell height scales with density
-  const cellMinH = density === 'full' ? '90px' : density === 'medium' ? '80px' : '70px';
+  const cellMinH = mobile ? '52px' : (density === 'full' ? '90px' : density === 'medium' ? '80px' : '70px');
+  const gap = mobile ? '2px' : '3px';
 
-  html += '<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px;">';
+  html += '<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:' + gap + ';">';
 
   for (let i = 0; i < startDow; i++) {
     html += '<div style="min-height:' + cellMinH + ';"></div>';
@@ -1638,7 +1635,6 @@ function renderMonth() {
     const dateStr = toDateStr(d);
     const dayJobs = jobsPerDay[day];
 
-    // Sort by time
     dayJobs.sort((a,b) => {
       const getT = j => {
         const mp = parseDate(j.montaza_pocetak);
@@ -1655,14 +1651,16 @@ function renderMonth() {
       return mp && (mk ? (d >= mp && d <= mk) : isSameDay(d, mp)) && !j.montaza_gotova;
     }).length > 1;
 
-    const bgColor = isToday ? 'rgba(232,160,39,0.08)' : isWeekend ? 'rgba(255,255,255,0.02)' : 'var(--surface)';
-    const borderColor = isToday ? 'rgba(232,160,39,0.5)' : hasOverlap ? 'rgba(232,80,58,0.5)' : 'var(--border)';
+    const bgColor = isToday ? 'rgba(232,160,39,0.1)' : isWeekend ? 'rgba(255,255,255,0.02)' : 'var(--surface)';
+    const borderColor = isToday ? 'rgba(232,160,39,0.6)' : hasOverlap ? 'rgba(232,80,58,0.6)' : 'var(--border)';
     const dayNumColor = isToday ? 'var(--accent)' : isWeekend ? 'var(--red)' : 'var(--text)';
-    const dayNumSize = density === 'compact' ? '12px' : '14px';
+    const pad = mobile ? '3px' : '4px';
+    const radius = mobile ? '6px' : '8px';
+    const dayNumSize = mobile ? '11px' : (density === 'compact' ? '12px' : '14px');
 
     const monthCellOnclick = isPast ? '' : ' onclick="handleEmptyClick(this.dataset.date)" data-date="' + dateStr + '"';
-    html += '<div style="min-height:' + cellMinH + ';background:' + bgColor + ';border:1px solid ' + borderColor + ';border-radius:8px;padding:4px;cursor:' + (isPast?'default':'pointer') + '"' + monthCellOnclick + '>';
-    html += '<div style="font-family:var(--font-display);font-size:' + dayNumSize + ';font-weight:700;color:' + dayNumColor + ';margin-bottom:2px;line-height:1">' + day + '</div>';
+    html += '<div style="min-height:' + cellMinH + ';background:' + bgColor + ';border:1px solid ' + borderColor + ';border-radius:' + radius + ';padding:' + pad + ';cursor:' + (isPast?'default':'pointer') + '"' + monthCellOnclick + '>';
+    html += '<div style="font-family:var(--font-display);font-size:' + dayNumSize + ';font-weight:700;color:' + dayNumColor + ';line-height:1;margin-bottom:2px">' + day + '</div>';
 
     const visibleJobs = dayJobs.slice(0, SHOW_MAX);
     const hiddenCount = dayJobs.length - visibleJobs.length;
@@ -1670,52 +1668,49 @@ function renderMonth() {
     visibleJobs.forEach(j => {
       const mp = parseDate(j.montaza_pocetak);
       const mk = parseDate(j.montaza_kraj);
-      const izm = parseDate(j.datum_izmjere);
       const inMont = mp && (mk ? (d >= mp && d <= mk) : isSameDay(d, mp));
+      const noKraj = !j.montaza_kraj && mp;
 
       let bg, border, typeIcon, timeStr;
       if (inMont && j.montaza_gotova) {
-        bg='rgba(58,184,122,0.15)'; border='rgba(58,184,122,0.4)'; typeIcon='🔧';
-        timeStr = j.montaza_pocetak_vrijeme || '';
+        bg='rgba(58,184,122,0.2)'; border='rgba(58,184,122,0.5)'; typeIcon='🔧'; timeStr=j.montaza_pocetak_vrijeme||'';
       } else if (inMont) {
-        bg='rgba(232,80,58,0.15)'; border='rgba(232,80,58,0.4)'; typeIcon='🔧';
-        timeStr = j.montaza_pocetak_vrijeme || '';
+        bg='rgba(232,80,58,0.18)'; border='rgba(232,80,58,0.5)'; typeIcon='🔧'; timeStr=j.montaza_pocetak_vrijeme||'';
       } else {
-        bg='rgba(61,126,255,0.15)'; border='rgba(61,126,255,0.4)'; typeIcon='📐';
-        timeStr = j.vrijeme_izmjere || '';
+        bg='rgba(61,126,255,0.18)'; border='rgba(61,126,255,0.5)'; typeIcon='📐'; timeStr=j.vrijeme_izmjere||'';
       }
 
-      const noKraj = !j.montaza_kraj && mp;
-      const borderStyle = noKraj ? 'dashed' : 'solid';
-      const addr = j.adresa.split(',')[0];
-
-      // Padding and font size scale with density
-      const pad = density === 'compact' ? '3px 5px' : '4px 6px';
-      const nameSize = density === 'compact' ? '10px' : '11px';
-      const subSize = '10px';
-
-      let inner = '<div style="font-size:' + nameSize + ';font-weight:700;color:var(--text);line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'
-        + typeIcon + ' ' + j.kupac
-        + (noKraj ? ' <span style="font-size:9px;color:var(--accent)">kraj?</span>' : '')
-        + '</div>';
-
-      if (density !== 'compact') {
-        if (timeStr) inner += '<div style="font-size:' + subSize + ';color:var(--muted);margin-top:1px">⏰ ' + timeStr + '</div>';
+      if (mobile) {
+        // Mobile: just a colored dot-bar with icon
+        const lastName = j.kupac.split(' ').slice(-1)[0];
+        html += '<div onclick="event.stopPropagation();openDetail(' + j.id + ')" style="background:' + bg + ';border-left:2px solid ' + border + ';border-radius:3px;padding:2px 4px;margin-bottom:2px;cursor:pointer;overflow:hidden">'
+              + '<div style="font-size:9px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.3">' + typeIcon + ' ' + lastName + '</div>'
+              + (timeStr ? '<div style="font-size:8px;color:var(--muted);line-height:1.2">' + timeStr + '</div>' : '')
+              + '</div>';
+      } else {
+        const addr = j.adresa.split(',')[0];
+        const borderStyle = noKraj ? 'dashed' : 'solid';
+        const pad2 = density === 'compact' ? '3px 5px' : '4px 6px';
+        const nameSize = density === 'compact' ? '10px' : '11px';
+        let inner = '<div style="font-size:' + nameSize + ';font-weight:700;color:var(--text);line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'
+          + typeIcon + ' ' + j.kupac
+          + (noKraj ? ' <span style="font-size:9px;color:var(--accent)">kraj?</span>' : '')
+          + '</div>';
+        if (density !== 'compact' && timeStr) inner += '<div style="font-size:10px;color:var(--muted);margin-top:1px">⏰ ' + timeStr + '</div>';
+        if (density === 'full') inner += '<div style="font-size:10px;color:var(--muted);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">📍 ' + addr + '</div>';
+        html += '<div onclick="event.stopPropagation();openDetail(' + j.id + ')" style="background:' + bg + ';border:1px ' + borderStyle + ' ' + border + ';border-radius:4px;padding:' + pad2 + ';margin-bottom:2px;cursor:pointer;overflow:hidden">'
+              + inner + '</div>';
       }
-      if (density === 'full') {
-        inner += '<div style="font-size:' + subSize + ';color:var(--muted);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">📍 ' + addr + '</div>';
-      }
-
-      html += '<div onclick="event.stopPropagation();openDetail(' + j.id + ')" style="background:' + bg + ';border:1px ' + borderStyle + ' ' + border + ';border-radius:4px;padding:' + pad + ';margin-bottom:2px;cursor:pointer;overflow:hidden">'
-            + inner + '</div>';
     });
 
-    // "+N više" badge
     if (hiddenCount > 0) {
-      html += '<div onclick="event.stopPropagation()" style="font-size:10px;font-weight:600;color:var(--muted);text-align:center;padding:2px;background:var(--surface2);border-radius:4px;margin-top:1px">+ još ' + hiddenCount + '</div>';
+      const moreStyle = mobile
+        ? 'font-size:8px;font-weight:600;color:var(--muted);text-align:center;line-height:1.4'
+        : 'font-size:10px;font-weight:600;color:var(--muted);text-align:center;padding:2px;background:var(--surface2);border-radius:4px;margin-top:1px';
+      html += '<div onclick="event.stopPropagation()" style="' + moreStyle + '">+' + hiddenCount + '</div>';
     }
 
-    if (!isPast && dayJobs.length === 0) {
+    if (!isPast && dayJobs.length === 0 && !mobile) {
       html += '<div style="text-align:center;color:var(--border);font-size:14px;margin-top:6px">+</div>';
     }
 

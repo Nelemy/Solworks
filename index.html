@@ -231,6 +231,41 @@ body { background: var(--bg); color: var(--text); font-family: var(--font-body);
   font-weight: 500;
 }
 .izmjere-day-cell.empty { background: transparent; }
+.montaza-row-wrap {
+  margin-top: 8px;
+  background: var(--surface);
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(232,80,58,0.2);
+  overflow: hidden;
+}
+.montaza-row-head {
+  padding: 6px 10px;
+  font-size: 10px; font-weight: 600; color: var(--red);
+  text-transform: uppercase; letter-spacing: 0.5px;
+  border-bottom: 1px solid var(--border);
+}
+.montaza-row-grid {
+  display: grid; grid-template-columns: 52px repeat(5, 1fr); gap: 4px;
+  padding: 6px;
+}
+.montaza-day-cell {
+  border-radius: 5px;
+  padding: 5px 5px;
+  min-height: 34px;
+  font-size: 10px;
+  line-height: 1.4;
+  font-weight: 500;
+}
+.montaza-day-cell.has-job {
+  background: rgba(232,80,58,0.12);
+  border: 1px solid rgba(232,80,58,0.3);
+  color: var(--text);
+  cursor: pointer;
+}
+.montaza-day-cell.empty { background: transparent; }
+.montaza-cell-name { font-size: 11px; font-weight: 700; color: var(--text); }
+.montaza-cell-addr { font-size: 10px; color: var(--muted); margin-top: 1px; }
+.montaza-cell-day  { font-size: 10px; color: var(--red); margin-top: 1px; font-weight: 600; }
 
 /* Overlap warning row */
 .overlap-row-wrap {
@@ -349,7 +384,7 @@ select.form-input { cursor: pointer; }
   .week-nav-label { font-size: 16px; }
   .cal-week { padding: 16px 24px 80px; }
   .cal-day-row, .cal-grid { grid-template-columns: 64px repeat(5, 1fr); gap: 6px; }
-  .izmjere-row-grid, .overlap-row-grid { grid-template-columns: 64px repeat(5, 1fr); gap: 6px; }
+  .izmjere-row-grid, .overlap-row-grid, .montaza-row-grid { grid-template-columns: 64px repeat(5, 1fr); gap: 6px; }
   .job-pill { min-height: 44px; font-size: 12px; padding: 7px 9px; }
   .job-pill-name { font-size: 11px; }
   .job-pill-sub { font-size: 10px; }
@@ -741,16 +776,59 @@ function renderCalendar() {
   });
   html += '</div>'; // cal-grid
 
-  // Izmjere summary row
-  html += '<div class="izmjere-row-wrap"><div class="izmjere-row-head">📐 Izmjere ovog tjedna</div><div class="izmjere-row-grid"><div></div>';
+  // ── MONTAŽA SUMMARY ROW ──
+  html += '<div class="montaza-row-wrap"><div class="montaza-row-head">🔧 Montaže ovog tjedna</div><div class="montaza-row-grid"><div></div>';
+  weekDays.forEach(d => {
+    const montOnDay = jobs.filter(j => {
+      const mp = parseDate(j.montaza_pocetak);
+      const mk = parseDate(j.montaza_kraj);
+      return mp && (mk ? (d >= mp && d <= mk) : isSameDay(d, mp)) && !j.montaza_gotova;
+    });
+    if (montOnDay.length > 0) {
+      let cellHtml = '<div class="montaza-day-cell has-job" onclick="' + montOnDay.map(j => 'openDetail(' + j.id + ')').join(';') + '">';
+      montOnDay.forEach(j => {
+        const mp = parseDate(j.montaza_pocetak);
+        const mk = parseDate(j.montaza_kraj);
+        const dayNum = daysBetween(mp, d) + 1;
+        const total = mk ? daysBetween(mp, mk) + 1 : null;
+        const dayLabel = total ? 'Dan ' + dayNum + '/' + total : 'Dan ' + dayNum + ' · kraj?';
+        const time = j.montaza_pocetak_vrijeme ? j.montaza_pocetak_vrijeme + ' · ' : '';
+        const addr = j.adresa.split(',')[0];
+        cellHtml += '<div style="margin-bottom:4px;padding-bottom:4px;border-bottom:1px solid rgba(255,255,255,0.07)">'
+          + '<div class="montaza-cell-name">🔧 ' + j.kupac + '</div>'
+          + '<div class="montaza-cell-addr">📍 ' + addr + '</div>'
+          + '<div class="montaza-cell-day">' + time + dayLabel + '</div>'
+          + '</div>';
+      });
+      cellHtml += '</div>';
+      html += cellHtml;
+    } else {
+      html += '<div class="montaza-day-cell empty"></div>';
+    }
+  });
+  html += '</div></div>';
+
+  // ── IZMJERE SUMMARY ROW ──
+  html += '<div class="izmjere-row-wrap" style="margin-top:6px"><div class="izmjere-row-head">📐 Izmjere ovog tjedna</div><div class="izmjere-row-grid"><div></div>';
   weekDays.forEach(d => {
     const izmOnDay = jobs.filter(j => {
       const izm = parseDate(j.datum_izmjere);
       return izm && isSameDay(izm, d);
     });
     if (izmOnDay.length > 0) {
-      const names = izmOnDay.map(j => j.kupac.split(' ').slice(-1)[0]).join(', ');
-      html += `<div class="izmjere-day-cell" onclick="${izmOnDay.map(j=>`openDetail(${j.id})`).join(';')}">${names}</div>`;
+      let cellHtml = '<div class="izmjere-day-cell" style="cursor:pointer" onclick="' + izmOnDay.map(j => 'openDetail(' + j.id + ')').join(';') + '">';
+      izmOnDay.forEach(j => {
+        const time = j.vrijeme_izmjere ? j.vrijeme_izmjere : '';
+        const addr = j.adresa.split(',')[0];
+        cellHtml += '<div style="margin-bottom:3px;padding-bottom:3px;border-bottom:1px solid rgba(61,126,255,0.15)">'
+          + '<div style="font-size:11px;font-weight:700;color:var(--text)">📐 ' + j.kupac + '</div>'
+          + '<div style="font-size:10px;color:var(--muted);margin-top:1px">📍 ' + addr + '</div>'
+          + (time ? '<div style="font-size:10px;color:var(--accent2);margin-top:1px">⏰ ' + time + '</div>' : '')
+          + (j.izmjera_gotova ? '<div style="font-size:10px;color:var(--green);margin-top:1px">✓ Gotova</div>' : '')
+          + '</div>';
+      });
+      cellHtml += '</div>';
+      html += cellHtml;
     } else {
       html += '<div class="izmjere-day-cell empty"></div>';
     }

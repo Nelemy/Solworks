@@ -761,50 +761,40 @@ select.form-input { cursor: pointer; }
 const SB_URL = 'https://ysezqohdfvanixpzdfoh.supabase.co';
 const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlzZXpxb2hkZnZhbml4cHpkZm9oIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkxMDEzMzMsImV4cCI6MjA5NDY3NzMzM30.Via-avx6eNxikPUAJuXVRkkzQ7Gza-44WhHZYPbodEM';
 
-let sbClient = null;
+// Plain fetch-based Supabase client (no SDK, no Headers object issues)
+const SB_HDR = {
+  'Content-Type': 'application/json',
+  'apikey': SB_KEY,
+  'Authorization': 'Bearer ' + SB_KEY,
+  'Prefer': 'return=representation'
+};
 
-function initSupabase() {
-  if (sbClient) return Promise.resolve();
-  return new Promise((resolve, reject) => {
-    if (window.supabase) {
-      sbClient = window.supabase.createClient(SB_URL, SB_KEY);
-      return resolve();
-    }
-    const s = document.createElement('script');
-    s.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js';
-    s.onload = () => {
-      sbClient = window.supabase.createClient(SB_URL, SB_KEY);
-      resolve();
-    };
-    s.onerror = reject;
-    document.head.appendChild(s);
-  });
+async function sbFetch(method, path, body) {
+  const opts = { method: method, headers: SB_HDR };
+  if (body !== undefined) opts.body = JSON.stringify(body);
+  const res = await fetch(SB_URL + '/rest/v1/' + path, opts);
+  if (!res.ok) {
+    const txt = await res.text();
+    throw new Error('Supabase error: ' + txt);
+  }
+  const txt = await res.text();
+  return txt ? JSON.parse(txt) : [];
 }
 
-async function sbSelect(query) {
-  await initSupabase();
-  const { data, error } = await sbClient.from('poslovi').select('*').order('created', {ascending: false}).order('id', {ascending: false});
-  if (error) throw new Error('Supabase error: ' + error.message);
-  return data;
+async function sbSelect() {
+  return await sbFetch('GET', 'poslovi?order=created.desc,id.desc&select=*');
 }
 
 async function sbInsert(row) {
-  await initSupabase();
-  const { data, error } = await sbClient.from('poslovi').insert(row).select();
-  if (error) throw new Error('Supabase error: ' + error.message);
-  return data;
+  return await sbFetch('POST', 'poslovi', row);
 }
 
 async function sbUpdate(id, fields) {
-  await initSupabase();
-  const { error } = await sbClient.from('poslovi').update(fields).eq('id', id);
-  if (error) throw new Error('Supabase error: ' + error.message);
+  await sbFetch('PATCH', 'poslovi?id=eq.' + id, fields);
 }
 
 async function sbDelete(id) {
-  await initSupabase();
-  const { error } = await sbClient.from('poslovi').delete().eq('id', id);
-  if (error) throw new Error('Supabase error: ' + error.message);
+  await sbFetch('DELETE', 'poslovi?id=eq.' + id);
 }
 
 // ── DATA ──────────────────────────────────────────────────────────────────
@@ -1192,7 +1182,7 @@ function renderMobileCalendar() {
   if (dayJobs.length === 0) {
     bodyEl.innerHTML = isPast
       ? '<div class="mobile-day-empty" style="cursor:default">Nema poslova ovaj dan</div>'
-      : '<div class="mobile-day-empty" data-date="\' + mobileSelectedDay + \'" onclick="handleEmptyClick(this.dataset.date)">+ Dodaj posao za ovaj dan</div>';
+      : '<div class="mobile-day-empty" onclick="handleEmptyClick(mobileSelectedDay)">+ Dodaj posao za ovaj dan</div>';
     return;
   }
 
@@ -1251,7 +1241,7 @@ function renderMobileCalendar() {
       + '</div>'
       + '</div>';
   }).join('')
-    + (isPast ? '' : '<div class="mobile-day-empty" data-date="\' + mobileSelectedDay + \'" onclick="handleEmptyClick(this.dataset.date)" style="margin-top:4px">+ Dodaj posao</div>');
+    + (isPast ? '' : '<div class="mobile-day-empty" onclick="handleEmptyClick(mobileSelectedDay)" style="margin-top:4px">+ Dodaj posao</div>');
 }
 
 function selectMobileDay(dateStr) {

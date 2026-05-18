@@ -665,18 +665,29 @@ select.form-input { cursor: pointer; }
   </div>
 </div>
 
-<script type="module">
+<script>
 // ── SUPABASE CONFIG ───────────────────────────────────────────────────────
 const SB_URL = 'https://ysezqohdfvanixpzdfoh.supabase.co';
 const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlzZXpxb2hkZnZhbml4cHpkZm9oIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkxMDEzMzMsImV4cCI6MjA5NDY3NzMzM30.Via-avx6eNxikPUAJuXVRkkzQ7Gza-44WhHZYPbodEM';
 
-// Use Supabase JS SDK via CDN
 let supabase = null;
 
-async function initSupabase() {
-  if (supabase) return;
-  const { createClient } = await import('https://esm.sh/@supabase/supabase-js@2');
-  supabase = createClient(SB_URL, SB_KEY);
+function initSupabase() {
+  if (supabase) return Promise.resolve();
+  return new Promise((resolve, reject) => {
+    if (window.supabase) {
+      supabase = window.supabase.createClient(SB_URL, SB_KEY);
+      return resolve();
+    }
+    const s = document.createElement('script');
+    s.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js';
+    s.onload = () => {
+      supabase = window.supabase.createClient(SB_URL, SB_KEY);
+      resolve();
+    };
+    s.onerror = reject;
+    document.head.appendChild(s);
+  });
 }
 
 async function sbSelect(query) {

@@ -1198,14 +1198,24 @@ function openDetail(id) {
   document.getElementById('detail-modal').classList.add('open');
 }
 
-function toggleField(field) {
+async function toggleField(field) {
   const map = {izmjera_gotova:'tog-izmjera', materijal_narucen:'tog-materijal', montaza_gotova:'tog-montaza'};
   const jobs = getJobs();
   const job = jobs.find(j=>j.id===currentJobId);
   if (!job) return;
   job[field] = !job[field];
   document.getElementById(map[field]).classList.toggle('on', job[field]);
-  saveJob(job).catch(e => showToast('Greška pri spremanju: ' + e.message, true));
+  try {
+    // Update in cache immediately so render works without reload
+    const { id, ...fields } = job;
+    await sbUpdate(id, fields);
+    showToast('Spremljeno ✓');
+  } catch(e) {
+    // Revert toggle on error
+    job[field] = !job[field];
+    document.getElementById(map[field]).classList.toggle('on', job[field]);
+    showToast('Greška: ' + e.message, true);
+  }
 }
 
 function pretvoriUMontazu() {

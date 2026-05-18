@@ -665,14 +665,13 @@ select.form-input { cursor: pointer; }
     <div class="modal-section">
       <div class="modal-section-title">Termini</div>
       <div class="form-row">
-        <div class="form-row">
-          <div class="form-group"><label class="form-label">Datum izmjere</label><input class="form-input" id="f-izm" type="date"></div>
-          <div class="form-group"><label class="form-label">Vrijeme izmjere</label><input class="form-input" id="f-izm-time" type="time" placeholder="08:00"></div>
-        </div>
-        <div class="form-row">
-          <div class="form-group"><label class="form-label">Montaža početak</label><input class="form-input" id="f-mont-poc" type="date"></div>
-          <div class="form-group"><label class="form-label">Početak u</label><input class="form-input" id="f-mont-poc-time" type="time" placeholder="07:00"></div>
-        </div>
+        <div class="form-group"><label class="form-label">Datum izmjere</label><input class="form-input" id="f-izm" type="date"></div>
+        <div class="form-group"><label class="form-label">Vrijeme izmjere</label><input class="form-input" id="f-izm-time" type="time" placeholder="08:00"></div>
+      </div>
+      <div style="height:1px;background:var(--border);margin:6px 0 10px;opacity:0.5"></div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Montaža početak</label><input class="form-input" id="f-mont-poc" type="date"></div>
+        <div class="form-group"><label class="form-label">Početak u</label><input class="form-input" id="f-mont-poc-time" type="time" placeholder="07:00"></div>
       </div>
       <div class="form-group"><label class="form-label">Montaža kraj (procjena)</label><input class="form-input" id="f-mont-kraj" type="date"></div>
       <div class="form-group"><label class="form-label">Napomena</label><input class="form-input" id="f-napomena" placeholder="Bilješka za ekipu..." type="text"></div>
@@ -1291,12 +1290,7 @@ function openAddModal(prefillDateStr) {
 }
 
 function updateTipForm() {
-  const tip = document.querySelector('input[name="tip_posla"]:checked')?.value || 'izmjera';
-  const izmjeraFields = document.getElementById('f-izmjera-termini');
-  const montazaFields = document.getElementById('f-montaza-termini');
-  if (!izmjeraFields || !montazaFields) return;
-  izmjeraFields.style.display = tip === 'izmjera' ? '' : 'none';
-  montazaFields.style.display = tip === 'montaza' ? '' : 'none';
+  // No fields to hide/show — all always visible
 }
 
 function closeAddModal() {

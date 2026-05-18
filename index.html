@@ -931,13 +931,15 @@ function renderCalendar() {
 
         const noKraj = !j.montaza_kraj && parseDate(j.montaza_pocetak);
         const tipIcon = j.tip_posla === 'montaza' ? '🔧' : '📐';
-        html += `<div class="job-pill ${pillClass}" style="${noKraj ? 'border-style:dashed;' : ''}" onclick="openDetail(${j.id})">`;
-          ${hasOverlap ? '<div class="overlap-dot"></div>' : ''}
-          ${noKraj ? '<div style="position:absolute;top:4px;right:6px;font-size:9px;color:var(--accent);font-weight:700">kraj?</div>' : ''}
-          <div class="job-pill-name">${tipIcon} ${j.kupac}</div>
-          <div class="job-pill-sub">${sub}</div>
-          <div class="job-pill-addr">📍 ${j.adresa.split(',')[0]}</div>
-        </div>`;
+        const pillStyle = noKraj ? 'border-style:dashed;' : '';
+        const overlapDot = hasOverlap ? '<div class="overlap-dot"></div>' : '';
+        const krajLabel = noKraj ? '<div style="position:absolute;top:4px;right:6px;font-size:9px;color:var(--accent);font-weight:700">kraj?</div>' : '';
+        html += '<div class="job-pill ' + pillClass + '" style="' + pillStyle + '" onclick="openDetail(' + j.id + ')">'
+              + overlapDot + krajLabel
+              + '<div class="job-pill-name">' + tipIcon + ' ' + j.kupac + '</div>'
+              + '<div class="job-pill-sub">' + sub + '</div>'
+              + '<div class="job-pill-addr">📍 ' + j.adresa.split(',')[0] + '</div>'
+              + '</div>';
       });
 
       // Add extra "+" only if not past

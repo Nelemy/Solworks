@@ -665,29 +665,44 @@ select.form-input { cursor: pointer; }
   </div>
 </div>
 
-<script>
+<script type="module">
 // ── SUPABASE CONFIG ───────────────────────────────────────────────────────
 const SB_URL = 'https://ysezqohdfvanixpzdfoh.supabase.co';
 const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlzZXpxb2hkZnZhbml4cHpkZm9oIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkxMDEzMzMsImV4cCI6MjA5NDY3NzMzM30.Via-avx6eNxikPUAJuXVRkkzQ7Gza-44WhHZYPbodEM';
 
-const sbHeaders = {
-  'Content-Type': 'application/json',
-  'apikey': SB_KEY,
-  'Authorization': 'Bearer ' + SB_KEY,
-  'Prefer': 'return=representation'
-};
+// Use Supabase JS SDK via CDN
+let supabase = null;
 
-async function sbFetch(path, options = {}) {
-  const res = await fetch(SB_URL + '/rest/v1/' + path, {
-    headers: sbHeaders,
-    ...options
-  });
-  if (!res.ok) {
-    const err = await res.text();
-    throw new Error('Supabase error: ' + err);
-  }
-  const text = await res.text();
-  return text ? JSON.parse(text) : [];
+async function initSupabase() {
+  if (supabase) return;
+  const { createClient } = await import('https://esm.sh/@supabase/supabase-js@2');
+  supabase = createClient(SB_URL, SB_KEY);
+}
+
+async function sbSelect(query) {
+  await initSupabase();
+  const { data, error } = await supabase.from('poslovi').select('*').order('created', {ascending: false}).order('id', {ascending: false});
+  if (error) throw new Error('Supabase error: ' + error.message);
+  return data;
+}
+
+async function sbInsert(row) {
+  await initSupabase();
+  const { data, error } = await supabase.from('poslovi').insert(row).select();
+  if (error) throw new Error('Supabase error: ' + error.message);
+  return data;
+}
+
+async function sbUpdate(id, fields) {
+  await initSupabase();
+  const { error } = await supabase.from('poslovi').update(fields).eq('id', id);
+  if (error) throw new Error('Supabase error: ' + error.message);
+}
+
+async function sbDelete(id) {
+  await initSupabase();
+  const { error } = await supabase.from('poslovi').delete().eq('id', id);
+  if (error) throw new Error('Supabase error: ' + error.message);
 }
 
 // ── DATA ──────────────────────────────────────────────────────────────────
@@ -700,7 +715,7 @@ const MONTHS_SHORT = ['sij','velj','ožu','tra','svi','lip','srp','kol','ruj','l
 let _jobsCache = null;
 
 async function loadJobs() {
-  const data = await sbFetch('poslovi?order=created.desc,id.desc');
+  const data = await sbSelect();
   _jobsCache = data;
   return data;
 }
@@ -708,24 +723,16 @@ async function loadJobs() {
 async function saveJob(job) {
   const { id, ...fields } = job;
   if (id && typeof id === 'number' && id > 0) {
-    // Update existing
-    await sbFetch('poslovi?id=eq.' + id, {
-      method: 'PATCH',
-      body: JSON.stringify(fields)
-    });
+    await sbUpdate(id, fields);
   } else {
-    // Insert new
-    const result = await sbFetch('poslovi', {
-      method: 'POST',
-      body: JSON.stringify(fields)
-    });
+    const result = await sbInsert(fields);
     if (result && result[0]) job.id = result[0].id;
   }
-  _jobsCache = null; // invalidate cache
+  _jobsCache = null;
 }
 
 async function deleteJobById(id) {
-  await sbFetch('poslovi?id=eq.' + id, { method: 'DELETE' });
+  await sbDelete(id);
   _jobsCache = null;
 }
 

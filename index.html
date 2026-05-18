@@ -608,6 +608,11 @@ select.form-input { cursor: pointer; }
       <button class="btn-danger" onclick="archiveJob()">Arhiviraj</button>
       <button class="btn-secondary" onclick="closeDetailDirect()">Zatvori</button>
     </div>
+    <div style="padding:0 16px 8px" id="btn-pretvori-wrap">
+      <button onclick="pretvoriUMontazu()" style="width:100%;height:44px;border-radius:var(--radius-sm);background:rgba(61,126,255,0.1);color:var(--accent2);font-size:14px;font-weight:600;border:1px solid rgba(61,126,255,0.3);cursor:pointer;transition:all 0.15s">
+        🔧 Pretvori u montažu
+      </button>
+    </div>
     <div style="padding:0 16px 16px">
       <button class="btn-delete" onclick="deleteJob()">🗑 Izbriši posao</button>
     </div>
@@ -624,7 +629,21 @@ select.form-input { cursor: pointer; }
     </div>
     <div class="modal-section">
       <div class="prefill-hint" id="prefill-hint"></div>
+      <input type="hidden" id="f-izmjera-id" value="">
       <div class="modal-section-title">Kupac</div>
+      <div class="form-group">
+        <label class="form-label">Tip posla *</label>
+        <div style="display:flex;gap:8px">
+          <label style="flex:1;display:flex;align-items:center;gap:8px;padding:10px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);cursor:pointer;transition:all 0.15s" id="tip-izmjera-label">
+            <input type="radio" name="tip_posla" id="tip-izmjera" value="izmjera" checked style="accent-color:var(--accent2)">
+            <span style="font-size:13px">📐 Izmjera</span>
+          </label>
+          <label style="flex:1;display:flex;align-items:center;gap:8px;padding:10px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);cursor:pointer;transition:all 0.15s" id="tip-montaza-label">
+            <input type="radio" name="tip_posla" id="tip-montaza" value="montaza">
+            <span style="font-size:13px">🔧 Montaža</span>
+          </label>
+        </div>
+      </div>
       <div class="form-group"><label class="form-label">Ime i prezime *</label><input class="form-input" id="f-kupac" placeholder="npr. Horvat Ivan" type="text"></div>
       <div class="form-group"><label class="form-label">Adresa *</label><input class="form-input" id="f-adresa" placeholder="npr. Varaždin, Ul. Matice 12" type="text"></div>
       <div class="form-group"><label class="form-label">Telefon</label><input class="form-input" id="f-tel" placeholder="091 234 5678" type="tel"></div>
@@ -911,10 +930,11 @@ function renderCalendar() {
         });
 
         const noKraj = !j.montaza_kraj && parseDate(j.montaza_pocetak);
-        html += `<div class="job-pill ${pillClass}" style="${noKraj ? 'border-style:dashed;' : ''}" onclick="openDetail(${j.id})">
+        const tipIcon = j.tip_posla === 'montaza' ? '🔧' : '📐';
+        html += `<div class="job-pill ${pillClass}" style="${noKraj ? 'border-style:dashed;' : ''}" onclick="openDetail(${j.id})">`;
           ${hasOverlap ? '<div class="overlap-dot"></div>' : ''}
           ${noKraj ? '<div style="position:absolute;top:4px;right:6px;font-size:9px;color:var(--accent);font-weight:700">kraj?</div>' : ''}
-          <div class="job-pill-name">${j.kupac}</div>
+          <div class="job-pill-name">${tipIcon} ${j.kupac}</div>
           <div class="job-pill-sub">${sub}</div>
           <div class="job-pill-addr">📍 ${j.adresa.split(',')[0]}</div>
         </div>`;
@@ -1168,6 +1188,12 @@ function openDetail(id) {
   const napSec = document.getElementById('dm-napomena-section');
   if (job.napomena) { napSec.style.display=''; document.getElementById('dm-napomena').textContent=job.napomena; }
   else napSec.style.display='none';
+  // Show 'pretvori' button only for izmjera jobs
+  const pretvoriWrap = document.getElementById('btn-pretvori-wrap');
+  if (pretvoriWrap) {
+    const isIzmjera = !job.tip_posla || job.tip_posla === 'izmjera';
+    pretvoriWrap.style.display = isIzmjera ? '' : 'none';
+  }
   document.getElementById('detail-modal').classList.add('open');
 }
 
@@ -1179,6 +1205,34 @@ function toggleField(field) {
   job[field] = !job[field];
   document.getElementById(map[field]).classList.toggle('on', job[field]);
   saveJob(job).catch(e => showToast('Greška pri spremanju: ' + e.message, true));
+}
+
+function pretvoriUMontazu() {
+  const job = getJobs().find(j => j.id === currentJobId);
+  if (!job) return;
+  closeDetailDirect();
+
+  // Prefill add form with izmjera data
+  setTimeout(() => {
+    openAddModal();
+
+    // Set tip to montaza
+    const montazaRadio = document.getElementById('tip-montaza');
+    if (montazaRadio) montazaRadio.checked = true;
+
+    // Fill in kupac data
+    document.getElementById('f-kupac').value = job.kupac || '';
+    document.getElementById('f-adresa').value = job.adresa || '';
+    document.getElementById('f-tel').value = job.tel || '';
+    document.getElementById('f-iznos').value = job.iznos || '';
+    document.getElementById('f-napomena').value = 'Izmjera: ' + (job.datum_izmjere ? fmtDate(job.datum_izmjere) : '') + (job.napomena ? ' — ' + job.napomena : '');
+    document.getElementById('f-izmjera-id').value = job.id;
+
+    // Update prefill hint
+    const hint = document.getElementById('prefill-hint');
+    hint.textContent = '🔧 Montaža iz izmjere — ' + job.kupac + '. Dodaj datume montaže.';
+    hint.classList.add('visible');
+  }, 100);
 }
 
 async function deleteJob() {
@@ -1239,6 +1293,9 @@ function closeAddModal() {
       document.getElementById(id).value='';
     });
     document.getElementById('f-plac').value='Neplaćeno';
+    document.getElementById('f-izmjera-id').value='';
+    const izmjeraRadio = document.getElementById('tip-izmjera');
+    if(izmjeraRadio) izmjeraRadio.checked = true;
     document.getElementById('prefill-hint').classList.remove('visible');
     prefillDate = null;
 }
@@ -1252,6 +1309,8 @@ async function addJob() {
   try {
     const newJob = {
       kupac, adresa,
+      tip_posla: document.querySelector('input[name="tip_posla"]:checked')?.value || 'izmjera',
+      izmjera_id: document.getElementById('f-izmjera-id').value ? parseInt(document.getElementById('f-izmjera-id').value) : null,
       tel: document.getElementById('f-tel').value.trim(),
       iznos: parseFloat(document.getElementById('f-iznos').value)||0,
       status_placanja: document.getElementById('f-plac').value,

@@ -126,10 +126,10 @@ body { background: var(--bg); color: var(--text); font-family: var(--font-body);
   border-color: rgba(232,160,39,0.4);
 }
 .cal-day-header.past { opacity: 0.5; }
-.cal-day-name { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
+.cal-day-name { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; }
 .cal-day-num {
-  font-family: var(--font-display); font-size: 16px; font-weight: 700;
-  color: var(--text); margin-top: 1px;
+  font-family: var(--font-display); font-size: 20px; font-weight: 700;
+  color: var(--text); margin-top: 2px;
 }
 .cal-day-header.today .cal-day-num { color: var(--accent); }
 .cal-time-label {
@@ -165,22 +165,23 @@ body { background: var(--bg); color: var(--text); font-family: var(--font-body);
 
 /* Job pill in calendar */
 .job-pill {
-  border-radius: 6px;
-  padding: 5px 7px;
-  font-size: 11px;
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 12px;
   cursor: pointer;
   transition: opacity 0.15s;
   position: relative;
   overflow: hidden;
-  min-height: 38px;
-  display: flex; flex-direction: column; justify-content: center;
+  min-height: 60px;
+  display: flex; flex-direction: column; justify-content: flex-start; gap: 2px;
 }
 .job-pill:active { opacity: 0.8; }
 .job-pill-montaza { background: rgba(232,80,58,0.18); border: 1px solid rgba(232,80,58,0.4); }
 .job-pill-izmjera { background: rgba(61,126,255,0.18); border: 1px solid rgba(61,126,255,0.4); }
 .job-pill-gotovo  { background: rgba(58,184,122,0.12); border: 1px solid rgba(58,184,122,0.3); opacity: 0.7; }
-.job-pill-name { font-weight: 600; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 10px; }
-.job-pill-sub { font-size: 9px; color: var(--muted); margin-top: 1px; }
+.job-pill-name { font-weight: 700; color: var(--text); font-size: 13px; line-height: 1.2; }
+.job-pill-sub { font-size: 11px; color: var(--muted); margin-top: 1px; }
+.job-pill-addr { font-size: 10px; color: var(--muted); opacity: 0.8; margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .job-pill-montaza .job-pill-sub { color: var(--red); }
 .job-pill-izmjera .job-pill-sub { color: var(--accent2); }
 .job-pill-gotovo .job-pill-sub  { color: var(--green); }
@@ -221,12 +222,13 @@ body { background: var(--bg); color: var(--text); font-family: var(--font-body);
 .izmjere-day-cell {
   background: rgba(61,126,255,0.1);
   border-radius: 5px;
-  padding: 4px 4px;
-  min-height: 28px;
-  font-size: 9px;
+  padding: 6px 4px;
+  min-height: 34px;
+  font-size: 11px;
   color: var(--accent2);
   text-align: center;
-  line-height: 1.3;
+  line-height: 1.4;
+  font-weight: 500;
 }
 .izmjere-day-cell.empty { background: transparent; }
 
@@ -324,6 +326,8 @@ body { background: var(--bg); color: var(--text); font-family: var(--font-body);
 .btn-primary { flex: 1; height: 44px; border-radius: var(--radius-sm); background: var(--accent); color: #0f1117; font-family: var(--font-display); font-weight: 700; font-size: 14px; border: none; cursor: pointer; transition: opacity 0.15s; }
 .btn-primary:active { opacity: 0.85; }
 .btn-secondary { height: 44px; padding: 0 14px; border-radius: var(--radius-sm); background: transparent; color: var(--muted); font-size: 14px; border: 1px solid var(--border); cursor: pointer; }
+.btn-delete { width:100%; height:40px; border-radius:var(--radius-sm); background:transparent; color:rgba(232,80,58,0.6); font-size:13px; border:1px solid rgba(232,80,58,0.2); cursor:pointer; transition:all 0.15s; }
+.btn-delete:active { background:var(--red-bg); color:var(--red); }
 .btn-danger { height: 44px; padding: 0 14px; border-radius: var(--radius-sm); background: var(--red-bg); color: var(--red); font-size: 13px; border: 1px solid rgba(232,80,58,0.3); cursor: pointer; }
 .form-group { margin-bottom: 12px; }
 .form-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 5px; display: block; }
@@ -376,7 +380,8 @@ select.form-input { cursor: pointer; }
 <!-- TABS -->
 <div class="tabs">
   <div class="tab" onclick="switchTab('aktivni')">Poslovi</div>
-  <div class="tab active" onclick="switchTab('kalendar')">Kalendar</div>
+  <div class="tab active" onclick="switchTab('kalendar')">Tjedan</div>
+  <div class="tab" onclick="switchTab('mjesec')">Mjesec</div>
   <div class="tab" onclick="switchTab('arhiva')">Arhiva</div>
 </div>
 
@@ -393,6 +398,20 @@ select.form-input { cursor: pointer; }
     <button class="week-nav-btn" id="btn-next" onclick="nextWeek()">›</button>
   </div>
   <div class="cal-week" id="cal-week-body"></div>
+</div>
+
+
+<!-- ══ VIEW: MJESEC ══ -->
+<div id="view-mjesec" class="view">
+  <div class="week-nav" id="month-nav">
+    <button class="week-nav-btn" id="btn-month-prev" onclick="prevMonth()">‹</button>
+    <div class="week-nav-center">
+      <span class="week-nav-label" id="month-label"></span>
+      <span class="week-nav-today" onclick="goToCurrentMonth()" id="month-today-btn" style="display:none">Danas</span>
+    </div>
+    <button class="week-nav-btn" id="btn-month-next" onclick="nextMonth()">›</button>
+  </div>
+  <div id="cal-month-body" style="padding:8px 8px 100px"></div>
 </div>
 
 <!-- ══ VIEW: AKTIVNI ══ -->
@@ -460,6 +479,9 @@ select.form-input { cursor: pointer; }
       <button class="btn-danger" onclick="archiveJob()">Arhiviraj</button>
       <button class="btn-secondary" onclick="closeDetailDirect()">Zatvori</button>
     </div>
+    <div style="padding:0 16px 16px">
+      <button class="btn-delete" onclick="deleteJob()">🗑 Izbriši posao</button>
+    </div>
   </div>
 </div>
 
@@ -495,8 +517,14 @@ select.form-input { cursor: pointer; }
     <div class="modal-section">
       <div class="modal-section-title">Termini</div>
       <div class="form-row">
-        <div class="form-group"><label class="form-label">Datum izmjere</label><input class="form-input" id="f-izm" type="date"></div>
-        <div class="form-group"><label class="form-label">Montaža početak</label><input class="form-input" id="f-mont-poc" type="date"></div>
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">Datum izmjere</label><input class="form-input" id="f-izm" type="date"></div>
+          <div class="form-group"><label class="form-label">Vrijeme izmjere</label><input class="form-input" id="f-izm-time" type="time" placeholder="08:00"></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">Montaža početak</label><input class="form-input" id="f-mont-poc" type="date"></div>
+          <div class="form-group"><label class="form-label">Početak u</label><input class="form-input" id="f-mont-poc-time" type="time" placeholder="07:00"></div>
+        </div>
       </div>
       <div class="form-group"><label class="form-label">Montaža kraj (procjena)</label><input class="form-input" id="f-mont-kraj" type="date"></div>
       <div class="form-group"><label class="form-label">Napomena</label><input class="form-input" id="f-napomena" placeholder="Bilješka za ekipu..." type="text"></div>
@@ -517,11 +545,11 @@ const MONTHS_HR = ['siječanj','veljača','ožujak','travanj','svibanj','lipanj'
 const MONTHS_SHORT = ['sij','velj','ožu','tra','svi','lip','srp','kol','ruj','lis','stu','pro'];
 
 const SAMPLE_JOBS = [
-  { id:1, kupac:'Horvat Ivan', adresa:'Varaždin, Ul. Matice 12', tel:'091 234 5678', iznos:2400, status_placanja:'Avans', avans:500, datum_izmjere:'2025-05-12', montaza_pocetak:'2025-05-19', montaza_kraj:'2025-05-21', izmjera_gotova:true, materijal_narucen:true, montaza_gotova:false, napomena:'Kupac rekao 40m, izmjerom utvrđeno 38m', arhiva:false, created:'2025-05-10' },
-  { id:2, kupac:'Kovač Marija', adresa:'Ludbreg, Trg sv. Trojstva 5', tel:'098 765 4321', iznos:1850, status_placanja:'Neplaćeno', avans:0, datum_izmjere:'2025-05-20', montaza_pocetak:'2025-05-26', montaza_kraj:'2025-05-27', izmjera_gotova:false, materijal_narucen:false, montaza_gotova:false, napomena:'Na putu doma — izmjera utorak', arhiva:false, created:'2025-05-14' },
-  { id:3, kupac:'Marković Stjepan', adresa:'Čakovec, Frankopanska 3', tel:'095 111 2233', iznos:3200, status_placanja:'Neplaćeno', avans:0, datum_izmjere:'2025-05-22', montaza_pocetak:'2025-05-26', montaza_kraj:'2025-05-28', izmjera_gotova:false, materijal_narucen:false, montaza_gotova:false, napomena:'⚠️ Provjeri overlap s Kovač', arhiva:false, created:'2025-05-15' },
-  { id:4, kupac:'Petrić Ana', adresa:'Ivanec, Kolodvorska 8', tel:'092 444 5566', iznos:980, status_placanja:'Plaćeno', avans:980, datum_izmjere:'2025-05-15', montaza_pocetak:'2025-06-02', montaza_kraj:'2025-06-02', izmjera_gotova:true, materijal_narucen:false, montaza_gotova:false, napomena:'Manja ograda, 1 dan posla', arhiva:false, created:'2025-05-13' },
-  { id:5, kupac:'Novak Drago', adresa:'Varaždinske Toplice', tel:'091 777 8899', iznos:4100, status_placanja:'Plaćeno', avans:4100, datum_izmjere:'2025-05-05', montaza_pocetak:'2025-05-12', montaza_kraj:'2025-05-15', izmjera_gotova:true, materijal_narucen:true, montaza_gotova:true, napomena:'Kasnilo 1 dan zbog kiše', arhiva:true, created:'2025-05-01' },
+  { id:1, kupac:'Horvat Ivan', adresa:'Varaždin, Ul. Matice 12', tel:'091 234 5678', iznos:2400, status_placanja:'Avans', avans:500, datum_izmjere:'2025-05-12', vrijeme_izmjere:'09:00', montaza_pocetak:'2025-05-19', montaza_kraj:'2025-05-21', montaza_pocetak_vrijeme:'07:00', izmjera_gotova:true, materijal_narucen:true, montaza_gotova:false, napomena:'Kupac rekao 40m, izmjerom utvrđeno 38m', arhiva:false, created:'2025-05-10' },
+  { id:2, kupac:'Kovač Marija', adresa:'Ludbreg, Trg sv. Trojstva 5', tel:'098 765 4321', iznos:1850, status_placanja:'Neplaćeno', avans:0, datum_izmjere:'2025-05-20', vrijeme_izmjere:'14:00', montaza_pocetak:'2025-05-26', montaza_kraj:'2025-05-27', montaza_pocetak_vrijeme:'07:00', izmjera_gotova:false, materijal_narucen:false, montaza_gotova:false, napomena:'Na putu doma — izmjera utorak', arhiva:false, created:'2025-05-14' },
+  { id:3, kupac:'Marković Stjepan', adresa:'Čakovec, Frankopanska 3', tel:'095 111 2233', iznos:3200, status_placanja:'Neplaćeno', avans:0, datum_izmjere:'2025-05-22', vrijeme_izmjere:'11:00', montaza_pocetak:'2025-05-26', montaza_kraj:'2025-05-28', montaza_pocetak_vrijeme:'10:00', izmjera_gotova:false, materijal_narucen:false, montaza_gotova:false, napomena:'⚠️ Provjeri overlap s Kovač', arhiva:false, created:'2025-05-15' },
+  { id:4, kupac:'Petrić Ana', adresa:'Ivanec, Kolodvorska 8', tel:'092 444 5566', iznos:980, status_placanja:'Plaćeno', avans:980, datum_izmjere:'2025-05-15', vrijeme_izmjere:'13:30', montaza_pocetak:'2025-06-02', montaza_kraj:'2025-06-02', montaza_pocetak_vrijeme:'08:00', izmjera_gotova:true, materijal_narucen:false, montaza_gotova:false, napomena:'Manja ograda, 1 dan posla', arhiva:false, created:'2025-05-13' },
+  { id:5, kupac:'Novak Drago', adresa:'Varaždinske Toplice', tel:'091 777 8899', iznos:4100, status_placanja:'Plaćeno', avans:4100, datum_izmjere:'2025-05-05', vrijeme_izmjere:'', montaza_pocetak:'2025-05-12', montaza_kraj:'2025-05-15', montaza_pocetak_vrijeme:'07:00', izmjera_gotova:true, materijal_narucen:true, montaza_gotova:true, napomena:'Kasnilo 1 dan zbog kiše', arhiva:true, created:'2025-05-01' },
 ];
 
 function loadJobs() {
@@ -632,11 +660,22 @@ function renderCalendar() {
       const mp = parseDate(j.montaza_pocetak);
       const mk = parseDate(j.montaza_kraj);
       const izm = parseDate(j.datum_izmjere);
-      const inMont = mp && mk && d >= mp && d <= mk;
+      const inMont = mp && (mk ? (d >= mp && d <= mk) : isSameDay(d, mp));
       const isIzm = izm && isSameDay(izm, d);
       return inMont || isIzm;
     });
 
+    // Sort by time within the day
+    dayJobs.sort((a, b) => {
+      const getTime = (j) => {
+        const mp = parseDate(j.montaza_pocetak);
+        const izm = parseDate(j.datum_izmjere);
+        const inMont = mp && parseDate(j.montaza_kraj) && d >= mp && d <= parseDate(j.montaza_kraj);
+        const t = inMont ? (j.montaza_pocetak_vrijeme || '00:00') : (j.vrijeme_izmjere || '00:00');
+        return t;
+      };
+      return getTime(a).localeCompare(getTime(b));
+    });
     html += '<div class="cal-grid-col">';
 
     if (dayJobs.length === 0) {
@@ -658,12 +697,18 @@ function renderCalendar() {
         let sub = '';
         if (inMont && !j.montaza_gotova) {
           const dayNum = daysBetween(mp, d) + 1;
-          const total = daysBetween(mp, mk) + 1;
-          sub = `Dan ${dayNum}/${total}`;
+          const t = j.montaza_pocetak_vrijeme ? ` · ${j.montaza_pocetak_vrijeme}` : '';
+          if (mk) {
+            const total = daysBetween(mp, mk) + 1;
+            sub = `Dan ${dayNum}/${total}${t}`;
+          } else {
+            sub = `Dan ${dayNum}${t} · kraj?`;
+          }
         } else if (inMont && j.montaza_gotova) {
           sub = '✓ Gotovo';
         } else {
-          sub = '📐 Izmjera';
+          const tIzm = j.vrijeme_izmjere ? ` ${j.vrijeme_izmjere}` : '';
+          sub = `📐 Izmjera${tIzm}`;
         }
 
         // Check overlap
@@ -674,12 +719,13 @@ function renderCalendar() {
           return op && ok && op <= mk && ok >= mp;
         });
 
-        const lastName = j.kupac.split(' ').slice(-1)[0];
-
-        html += `<div class="job-pill ${pillClass}" onclick="openDetail(${j.id})">
+        const noKraj = !j.montaza_kraj && parseDate(j.montaza_pocetak);
+        html += `<div class="job-pill ${pillClass}" style="${noKraj ? 'border-style:dashed;' : ''}" onclick="openDetail(${j.id})">
           ${hasOverlap ? '<div class="overlap-dot"></div>' : ''}
-          <div class="job-pill-name">${lastName}</div>
+          ${noKraj ? '<div style="position:absolute;top:4px;right:6px;font-size:9px;color:var(--accent);font-weight:700">kraj?</div>' : ''}
+          <div class="job-pill-name">${j.kupac}</div>
           <div class="job-pill-sub">${sub}</div>
+          <div class="job-pill-addr">📍 ${j.adresa.split(',')[0]}</div>
         </div>`;
       });
 
@@ -845,12 +891,13 @@ function detectOverlap(job, allJobs) {
 // ── TABS ───────────────────────────────────────────────────────────────────
 function switchTab(tab) {
   document.querySelectorAll('.tab').forEach((t,i)=>{
-    t.classList.toggle('active', ['aktivni','kalendar','arhiva'][i]===tab);
+    t.classList.toggle('active', ['aktivni','kalendar','mjesec','arhiva'][i]===tab);
   });
   document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
   document.getElementById('view-'+tab).classList.add('active');
   if (tab==='aktivni') renderActive();
   if (tab==='kalendar') renderCalendar();
+  if (tab==='mjesec') renderMonth();
   if (tab==='arhiva') renderArchive();
 }
 
@@ -867,8 +914,10 @@ function openDetail(id) {
   document.getElementById('dm-iznos').textContent = job.iznos?job.iznos.toLocaleString('hr-HR')+' €':'—';
   document.getElementById('dm-plac').textContent = job.status_placanja;
   document.getElementById('dm-avans').textContent = job.avans?job.avans.toLocaleString('hr-HR')+' €':'—';
-  document.getElementById('dm-izm-dat').textContent = fmtDate(job.datum_izmjere);
-  document.getElementById('dm-mont-poc').textContent = fmtDate(job.montaza_pocetak);
+  const izmTime = job.vrijeme_izmjere ? ' u ' + job.vrijeme_izmjere : '';
+  document.getElementById('dm-izm-dat').textContent = fmtDate(job.datum_izmjere) + izmTime;
+  const montPocTime = job.montaza_pocetak_vrijeme ? ' u ' + job.montaza_pocetak_vrijeme : '';
+  document.getElementById('dm-mont-poc').textContent = fmtDate(job.montaza_pocetak) + montPocTime;
   document.getElementById('dm-mont-kraj').textContent = fmtDate(job.montaza_kraj);
   const traj=(job.montaza_pocetak&&job.montaza_kraj)?daysBetween(parseDate(job.montaza_pocetak),parseDate(job.montaza_kraj))+1+' dan/a':'—';
   document.getElementById('dm-trajanje').textContent = traj;
@@ -889,6 +938,13 @@ function toggleField(field) {
   job[field] = !job[field];
   document.getElementById(map[field]).classList.toggle('on', job[field]);
   saveJobs(jobs);
+}
+
+function deleteJob() {
+  if (!confirm('Trajno izbrisati ovaj posao? Ova radnja se ne može poništiti.')) return;
+  const jobs = getJobs().filter(j => j.id !== currentJobId);
+  saveJobs(jobs);
+  closeDetailDirect();
 }
 
 function archiveJob() {
@@ -916,6 +972,7 @@ function openAddModal(prefillDateStr) {
     hint.textContent = '📅 Dodaješ posao za ' + label;
     hint.classList.add('visible');
     document.getElementById('f-mont-poc').value = prefillDate;
+    document.getElementById('f-mont-poc-time').value = '07:00';
   } else {
     hint.classList.remove('visible');
     document.getElementById('f-mont-poc').value = '';
@@ -925,7 +982,7 @@ function openAddModal(prefillDateStr) {
 
 function closeAddModal() {
     document.getElementById('add-modal').classList.remove('open');
-    ['f-kupac','f-adresa','f-tel','f-iznos','f-avans','f-izm','f-mont-poc','f-mont-kraj','f-napomena'].forEach(id=>{
+    ['f-kupac','f-adresa','f-tel','f-iznos','f-avans','f-izm','f-izm-time','f-mont-poc','f-mont-poc-time','f-mont-kraj','f-napomena'].forEach(id=>{
       document.getElementById(id).value='';
     });
     document.getElementById('f-plac').value='Neplaćeno';
@@ -946,7 +1003,9 @@ function addJob() {
     status_placanja: document.getElementById('f-plac').value,
     avans: parseFloat(document.getElementById('f-avans').value)||0,
     datum_izmjere: document.getElementById('f-izm').value||null,
+    vrijeme_izmjere: document.getElementById('f-izm-time').value||'',
     montaza_pocetak: document.getElementById('f-mont-poc').value||null,
+    montaza_pocetak_vrijeme: document.getElementById('f-mont-poc-time').value||'',
     montaza_kraj: document.getElementById('f-mont-kraj').value||null,
     izmjera_gotova:false, materijal_narucen:false, montaza_gotova:false,
     napomena: document.getElementById('f-napomena').value.trim(),
@@ -956,6 +1015,158 @@ function addJob() {
   saveJobs(jobs);
   closeAddModal();
   renderCalendar();
+}
+
+
+// ── MONTH STATE ────────────────────────────────────────────────────────────
+let currentMonth = new Date().getMonth();
+let currentMonthYear = new Date().getFullYear();
+
+function prevMonth() {
+  currentMonth--;
+  if (currentMonth < 0) { currentMonth = 11; currentMonthYear--; }
+  renderMonth();
+}
+function nextMonth() {
+  currentMonth++;
+  if (currentMonth > 11) { currentMonth = 0; currentMonthYear++; }
+  renderMonth();
+}
+function goToCurrentMonth() {
+  currentMonth = new Date().getMonth();
+  currentMonthYear = new Date().getFullYear();
+  renderMonth();
+}
+
+function renderMonth() {
+  autoArchiveOld();
+  const jobs = getJobs().filter(j => !j.arhiva);
+  const today = new Date(); today.setHours(0,0,0,0);
+
+  const isCurrentMonth = currentMonth === today.getMonth() && currentMonthYear === today.getFullYear();
+  document.getElementById('month-label').textContent = MONTHS_HR[currentMonth].charAt(0).toUpperCase() + MONTHS_HR[currentMonth].slice(1) + ' ' + currentMonthYear;
+  document.getElementById('month-today-btn').style.display = isCurrentMonth ? 'none' : 'inline-block';
+
+  // First day of month, how many days
+  const firstDay = new Date(currentMonthYear, currentMonth, 1);
+  const lastDay = new Date(currentMonthYear, currentMonth + 1, 0);
+  const daysInMonth = lastDay.getDate();
+
+  // Start grid on Monday (adjust so Mon=0)
+  let startDow = firstDay.getDay(); // 0=Sun
+  startDow = startDow === 0 ? 6 : startDow - 1; // Mon=0
+
+  let html = '';
+
+  // Day-of-week headers
+  html += '<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-bottom:4px;">';
+  ['Pon','Uto','Sri','Čet','Pet','Sub','Ned'].forEach((d,i) => {
+    html += `<div style="text-align:center;font-size:12px;font-weight:600;color:${i>=5?'var(--red)':'var(--muted)'};padding:6px 2px;text-transform:uppercase;letter-spacing:0.5px">${d}</div>`;
+  });
+  html += '</div>';
+
+  // Calendar grid
+  html += '<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px;">';
+
+  // Empty cells before first day
+  for (let i = 0; i < startDow; i++) {
+    html += '<div style="min-height:80px;"></div>';
+  }
+
+  for (let day = 1; day <= daysInMonth; day++) {
+    const d = new Date(currentMonthYear, currentMonth, day);
+    const isToday = isSameDay(d, today);
+    const isPast = d < today && !isToday;
+    const isWeekend = d.getDay() === 0 || d.getDay() === 6;
+    const dateStr = toDateStr(d);
+
+    // Jobs on this day
+    const dayJobs = jobs.filter(j => {
+      const mp = parseDate(j.montaza_pocetak);
+      const mk = parseDate(j.montaza_kraj);
+      const izm = parseDate(j.datum_izmjere);
+      return (mp && mk && d >= mp && d <= mk) || (izm && isSameDay(izm, d));
+    });
+
+    // Sort by time
+    dayJobs.sort((a,b) => {
+      const getT = j => {
+        const mp = parseDate(j.montaza_pocetak);
+        const mk = parseDate(j.montaza_kraj);
+        const inM = mp && mk && d >= mp && d <= mk;
+        return inM ? (j.montaza_pocetak_vrijeme||'00:00') : (j.vrijeme_izmjere||'00:00');
+      };
+      return getT(a).localeCompare(getT(b));
+    });
+
+    const hasOverlap = (() => {
+      const montazeOnDay = dayJobs.filter(j => {
+        const mp = parseDate(j.montaza_pocetak);
+        const mk = parseDate(j.montaza_kraj);
+        const inM = mp && (mk ? (d >= mp && d <= mk) : isSameDay(d, mp));
+        return inM && !j.montaza_gotova;
+      });
+      return montazeOnDay.length > 1;
+    })();
+
+    const bgColor = isToday ? 'rgba(232,160,39,0.08)' : isWeekend ? 'rgba(255,255,255,0.02)' : 'var(--surface)';
+    const borderColor = isToday ? 'rgba(232,160,39,0.5)' : hasOverlap ? 'rgba(232,80,58,0.5)' : 'var(--border)';
+
+    html += `<div style="min-height:80px;background:${bgColor};border:1px solid ${borderColor};border-radius:8px;padding:4px;cursor:${isPast?'default':'pointer'}" onclick="${isPast?'':'handleEmptyClick(''+dateStr+'')'}">`;
+
+    // Day number
+    html += `<div style="font-family:var(--font-display);font-size:14px;font-weight:700;color:${isToday?'var(--accent)':isWeekend?'var(--red)':'var(--text)'};margin-bottom:3px;line-height:1">${day}</div>`;
+
+    // Job blocks
+    dayJobs.forEach(j => {
+      const mp = parseDate(j.montaza_pocetak);
+      const mk = parseDate(j.montaza_kraj);
+      const izm = parseDate(j.datum_izmjere);
+      const inMont = mp && mk && d >= mp && d <= mk;
+      const isIzmjera = izm && isSameDay(izm, d) && !inMont;
+
+      let bg, border, timeStr, typeIcon;
+      if (inMont && j.montaza_gotova) {
+        bg='rgba(58,184,122,0.15)'; border='rgba(58,184,122,0.4)';
+        const dayNum = daysBetween(mp,d)+1, total=daysBetween(mp,mk)+1;
+        timeStr = `✓ Dan ${dayNum}/${total}`;
+        typeIcon = '🔧';
+      } else if (inMont) {
+        bg='rgba(232,80,58,0.15)'; border='rgba(232,80,58,0.4)';
+        const dayNum = daysBetween(mp,d)+1, total=daysBetween(mp,mk)+1;
+        const t = j.montaza_pocetak_vrijeme ? j.montaza_pocetak_vrijeme : '';
+        timeStr = `${t ? t+' · ' : ''}Dan ${dayNum}/${total}`;
+        typeIcon = '🔧';
+      } else {
+        bg='rgba(61,126,255,0.15)'; border='rgba(61,126,255,0.4)';
+        timeStr = j.vrijeme_izmjere || '';
+        typeIcon = '📐';
+      }
+
+      const addr = j.adresa.split(',')[0];
+      const noKrajM = !j.montaza_kraj && parseDate(j.montaza_pocetak);
+      const krajBadge = noKrajM ? ' <span style="font-size:9px;color:var(--accent);font-weight:700">kraj?</span>' : '';
+      const borderStyle = noKrajM ? 'dashed' : 'solid';
+      const timeRow = timeStr ? '<div style="font-size:10px;color:var(--muted);margin-top:1px">' + timeStr + '</div>' : '';
+      html += '<div onclick="event.stopPropagation();openDetail(' + j.id + ')" style="background:' + bg + ';border:1px ' + borderStyle + ' ' + border + ';border-radius:5px;padding:4px 6px;margin-bottom:3px;cursor:pointer;position:relative;">'
+            + '<div style="font-size:11px;font-weight:700;color:var(--text);line-height:1.2">' + typeIcon + ' ' + j.kupac + krajBadge + '</div>'
+            + timeRow
+            + '<div style="font-size:10px;color:var(--muted);margin-top:1px">📍 ' + addr + '</div>'
+            + '</div>';
+    });
+
+    // + add button if not past and no jobs, or after jobs
+    if (!isPast) {
+      if (dayJobs.length === 0) {
+        html += `<div style="text-align:center;color:var(--border);font-size:16px;margin-top:8px">+</div>`;
+      }
+    }
+
+    html += '</div>';
+  }
+
+  html += '</div>';
+  document.getElementById('cal-month-body').innerHTML = html;
 }
 
 // ── INIT ───────────────────────────────────────────────────────────────────

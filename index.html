@@ -59,6 +59,7 @@ body { background: var(--bg); color: var(--text); font-family: var(--font-body);
 .tabs {
   display: flex; border-bottom: 1px solid var(--border);
   background: var(--bg); position: sticky; top: 52px; z-index: 99;
+  -webkit-overflow-scrolling: touch;
 }
 .tab {
   flex: 1; padding: 11px 8px; text-align: center;
@@ -76,7 +77,7 @@ body { background: var(--bg); color: var(--text); font-family: var(--font-body);
   padding: 10px 12px;
   background: var(--surface);
   border-bottom: 1px solid var(--border);
-  position: sticky; top: 95px; z-index: 90;
+  position: sticky; top: 90px; z-index: 90;
 }
 .week-nav-btn {
   width: 36px; height: 36px; border-radius: var(--radius-sm);
@@ -120,6 +121,8 @@ body { background: var(--bg); color: var(--text); font-family: var(--font-body);
   cursor: pointer;
   transition: background 0.15s;
   border: 1px solid var(--border);
+  touch-action: manipulation;
+  user-select: none;
 }
 .cal-day-header.today {
   background: rgba(232,160,39,0.15);
@@ -174,6 +177,8 @@ body { background: var(--bg); color: var(--text); font-family: var(--font-body);
   overflow: hidden;
   min-height: 60px;
   display: flex; flex-direction: column; justify-content: flex-start; gap: 2px;
+  touch-action: manipulation;
+  user-select: none;
 }
 .job-pill:active { opacity: 0.8; }
 .job-pill-montaza { background: rgba(232,80,58,0.18); border: 1px solid rgba(232,80,58,0.4); }
@@ -375,32 +380,121 @@ select.form-input { cursor: pointer; }
 .prefill-hint { font-size: 11px; color: var(--accent); margin-bottom: 10px; padding: 6px 10px; background: var(--amber-bg); border-radius: var(--radius-sm); border: 1px solid rgba(232,160,39,0.2); display: none; }
 .prefill-hint.visible { display: block; }
 
-/* ── PC / DESKTOP ── */
-@media (min-width: 768px) {
+/* ── MOBILE FIRST — base styles are for small phones ── */
+
+/* Topbar */
+.topbar { height: 52px; padding: 0 14px; }
+.topbar-logo { font-size: 17px; }
+.btn-add { height: 36px; padding: 0 12px; font-size: 12px; }
+
+/* Tabs */
+.tab { font-size: 13px; padding: 12px 6px; }
+
+/* Week nav */
+.week-nav { padding: 8px 10px; }
+.week-nav-btn { width: 38px; height: 38px; font-size: 20px; }
+.week-nav-label { font-size: 14px; }
+.week-nav-sub { font-size: 11px; }
+
+/* Week calendar */
+.cal-week { padding: 8px 6px 100px; }
+.cal-day-row, .cal-grid { grid-template-columns: 40px repeat(5, 1fr); gap: 3px; }
+.izmjere-row-grid, .overlap-row-grid, .montaza-row-grid { grid-template-columns: 40px repeat(5, 1fr); gap: 3px; }
+.cal-day-header { padding: 7px 3px; border-radius: 6px; }
+.cal-day-name { font-size: 11px; }
+.cal-day-num { font-size: 18px; }
+.cal-empty-col { min-height: 56px; border-radius: 6px; }
+.cal-grid-col { min-height: 56px; gap: 3px; }
+
+/* Job pill - mobile */
+.job-pill { min-height: 56px; padding: 7px 8px; border-radius: 7px; gap: 2px; }
+.job-pill-name { font-size: 12px; }
+.job-pill-sub { font-size: 10px; }
+.job-pill-addr { font-size: 10px; }
+
+/* Summary rows */
+.izmjere-row-head, .montaza-row-head { font-size: 11px; padding: 7px 10px; }
+.izmjere-day-cell { font-size: 10px; padding: 5px 3px; min-height: 32px; }
+.montaza-day-cell { font-size: 10px; padding: 4px 4px; }
+.montaza-cell-name { font-size: 10px; }
+.montaza-cell-addr, .montaza-cell-day { font-size: 9px; }
+
+/* Summary cards (week summaries below calendar) */
+.summary-strip { }
+.summary-card { padding: 10px 6px; }
+.summary-card .num { font-size: 22px; }
+.summary-card .lbl { font-size: 10px; }
+
+/* Active jobs list */
+.jobs-list { padding: 0 10px 100px; gap: 8px; }
+.job-card-top { padding: 11px 12px 9px; }
+.job-name { font-size: 15px; }
+.job-addr { font-size: 12px; }
+.meta-cell { padding: 7px 12px; }
+.meta-label { font-size: 10px; }
+.meta-value { font-size: 12px; }
+.badge { font-size: 11px; padding: 3px 9px; }
+
+/* Modal */
+.modal-title { font-size: 18px; }
+.modal-subtitle { font-size: 13px; }
+.modal-section-title { font-size: 11px; }
+.detail-label { font-size: 11px; }
+.detail-val { font-size: 13px; }
+.toggle-label { font-size: 14px; }
+.toggle { width: 46px; height: 26px; }
+.toggle::after { width: 20px; height: 20px; }
+.toggle.on::after { transform: translateX(20px); }
+.btn-primary { height: 48px; font-size: 15px; }
+.btn-secondary { height: 48px; font-size: 14px; }
+.btn-danger { height: 48px; font-size: 14px; }
+.btn-delete { height: 44px; font-size: 14px; }
+.form-label { font-size: 12px; }
+.form-input { font-size: 16px; padding: 12px 14px; }
+
+/* Archive */
+.archive-card { padding: 12px 13px; }
+.archive-name { font-size: 14px; }
+.archive-date { font-size: 11px; }
+.archive-iznos { font-size: 13px; }
+
+/* Section headers */
+.section-title { font-size: 13px; }
+.section-count { font-size: 12px; }
+
+/* ── TABLET / DESKTOP ── */
+@media (min-width: 600px) {
+  .topbar { padding: 0 20px; height: 56px; }
+  .topbar-logo { font-size: 19px; }
+  .btn-add { height: 38px; padding: 0 16px; font-size: 13px; }
+  .week-nav { padding: 10px 16px; }
+  .cal-week { padding: 12px 12px 100px; }
+  .cal-day-row, .cal-grid { grid-template-columns: 52px repeat(5, 1fr); gap: 4px; }
+  .izmjere-row-grid, .overlap-row-grid, .montaza-row-grid { grid-template-columns: 52px repeat(5, 1fr); gap: 4px; }
+  .cal-day-num { font-size: 20px; }
+  .job-pill { min-height: 62px; padding: 8px 10px; }
+  .job-pill-name { font-size: 13px; }
+  .job-pill-sub { font-size: 11px; }
+  .jobs-list { padding: 0 14px 100px; }
+}
+
+@media (min-width: 900px) {
+  body { max-width: 860px; margin: 0 auto; }
   .topbar { padding: 0 28px; height: 58px; }
   .topbar-logo { font-size: 20px; }
-  .btn-add { height: 38px; font-size: 14px; padding: 0 18px; }
-  .week-nav { padding: 12px 24px; top: 101px; }
+  .btn-add { height: 40px; padding: 0 20px; font-size: 14px; }
+  .week-nav { padding: 12px 24px; }
   .week-nav-label { font-size: 16px; }
-  .cal-week { padding: 16px 24px 80px; }
+  .cal-week { padding: 16px 20px 80px; }
   .cal-day-row, .cal-grid { grid-template-columns: 64px repeat(5, 1fr); gap: 6px; }
   .izmjere-row-grid, .overlap-row-grid, .montaza-row-grid { grid-template-columns: 64px repeat(5, 1fr); gap: 6px; }
-  .job-pill { min-height: 44px; font-size: 12px; padding: 7px 9px; }
-  .job-pill-name { font-size: 11px; }
-  .job-pill-sub { font-size: 10px; }
-  .cal-empty-col { min-height: 70px; }
-  .cal-day-num { font-size: 18px; }
+  .cal-empty-col { min-height: 72px; }
+  .job-pill { min-height: 68px; }
+  .cal-day-num { font-size: 22px; }
   .jobs-list { padding: 0 24px 80px; }
-  .summary-strip { padding: 0 4px; }
-  .summary-card .num { font-size: 24px; }
-  .job-name { font-size: 15px; }
-}
-@media (min-width: 1024px) {
-  body { max-width: 900px; margin: 0 auto; }
-  .topbar, .tabs, .week-nav { max-width: 900px; left: 50%; transform: translateX(-50%); }
-  .topbar { position: sticky; transform: none; left: auto; }
-  .tabs { position: sticky; transform: none; left: auto; }
-  .week-nav { position: sticky; transform: none; left: auto; }
+  .job-name { font-size: 16px; }
+  .summary-card .num { font-size: 26px; }
+  .modal-title { font-size: 20px; }
 }
 </style>
 </head>

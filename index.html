@@ -635,11 +635,11 @@ select.form-input { cursor: pointer; }
         <label class="form-label">Tip posla *</label>
         <div style="display:flex;gap:8px">
           <label style="flex:1;display:flex;align-items:center;gap:8px;padding:10px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);cursor:pointer;transition:all 0.15s" id="tip-izmjera-label">
-            <input type="radio" name="tip_posla" id="tip-izmjera" value="izmjera" checked style="accent-color:var(--accent2)">
+            <input type="radio" name="tip_posla" id="tip-izmjera" value="izmjera" checked style="accent-color:var(--accent2)" onchange="updateTipForm()">
             <span style="font-size:13px">📐 Izmjera</span>
           </label>
           <label style="flex:1;display:flex;align-items:center;gap:8px;padding:10px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);cursor:pointer;transition:all 0.15s" id="tip-montaza-label">
-            <input type="radio" name="tip_posla" id="tip-montaza" value="montaza">
+            <input type="radio" name="tip_posla" id="tip-montaza" value="montaza" onchange="updateTipForm()">
             <span style="font-size:13px">🔧 Montaža</span>
           </label>
         </div>
@@ -1220,7 +1220,7 @@ function pretvoriUMontazu() {
 
     // Set tip to montaza
     const montazaRadio = document.getElementById('tip-montaza');
-    if (montazaRadio) montazaRadio.checked = true;
+    if (montazaRadio) { montazaRadio.checked = true; updateTipForm(); }
 
     // Fill in kupac data
     document.getElementById('f-kupac').value = job.kupac || '';
@@ -1287,6 +1287,16 @@ function openAddModal(prefillDateStr) {
     document.getElementById('f-mont-poc').value = '';
   }
   document.getElementById('add-modal').classList.add('open');
+  updateTipForm();
+}
+
+function updateTipForm() {
+  const tip = document.querySelector('input[name="tip_posla"]:checked')?.value || 'izmjera';
+  const izmjeraFields = document.getElementById('f-izmjera-termini');
+  const montazaFields = document.getElementById('f-montaza-termini');
+  if (!izmjeraFields || !montazaFields) return;
+  izmjeraFields.style.display = tip === 'izmjera' ? '' : 'none';
+  montazaFields.style.display = tip === 'montaza' ? '' : 'none';
 }
 
 function closeAddModal() {
@@ -1297,7 +1307,7 @@ function closeAddModal() {
     document.getElementById('f-plac').value='Neplaćeno';
     document.getElementById('f-izmjera-id').value='';
     const izmjeraRadio = document.getElementById('tip-izmjera');
-    if(izmjeraRadio) izmjeraRadio.checked = true;
+    if(izmjeraRadio) { izmjeraRadio.checked = true; updateTipForm(); }
     document.getElementById('prefill-hint').classList.remove('visible');
     prefillDate = null;
 }

@@ -106,6 +106,76 @@ body { background: var(--bg); color: var(--text); font-family: var(--font-body);
   padding: 10px 10px 100px;
 }
 
+/* ── MOBILE DAY VIEW ── */
+.mobile-day-nav {
+  display: none;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 10px;
+  gap: 8px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.mobile-day-nav::-webkit-scrollbar { display: none; }
+.mobile-day-pill {
+  flex-shrink: 0;
+  display: flex; flex-direction: column; align-items: center;
+  padding: 7px 10px; border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  cursor: pointer; transition: all 0.15s;
+  min-width: 48px;
+  user-select: none;
+}
+.mobile-day-pill.active {
+  background: var(--accent); border-color: var(--accent);
+}
+.mobile-day-pill.today-pill {
+  border-color: rgba(232,160,39,0.5);
+}
+.mobile-day-pill .pill-name { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--muted); }
+.mobile-day-pill.active .pill-name { color: #0f1117; }
+.mobile-day-pill .pill-num { font-family: var(--font-display); font-size: 18px; font-weight: 700; color: var(--text); margin-top: 1px; }
+.mobile-day-pill.active .pill-num { color: #0f1117; }
+.mobile-day-pill.today-pill .pill-num { color: var(--accent); }
+.mobile-day-pill.active.today-pill .pill-num { color: #0f1117; }
+
+.mobile-day-body {
+  display: none;
+  padding: 10px 10px 100px;
+  flex-direction: column; gap: 8px;
+}
+.mobile-day-empty {
+  border: 1px dashed var(--border); border-radius: 12px;
+  padding: 32px 16px; text-align: center;
+  color: var(--muted); font-size: 14px; cursor: pointer;
+}
+.mobile-job-card {
+  background: var(--surface); border-radius: 12px;
+  border: 1px solid var(--border); overflow: hidden; cursor: pointer;
+}
+.mobile-job-card.montaza { border-left: 4px solid var(--red); }
+.mobile-job-card.izmjera { border-left: 4px solid var(--accent2); }
+.mobile-job-card.gotovo  { border-left: 4px solid var(--green); opacity: 0.75; }
+.mobile-job-card.no-kraj { border-style: dashed; }
+.mobile-job-top { padding: 12px 14px 10px; }
+.mobile-job-name { font-family: var(--font-display); font-size: 16px; font-weight: 700; }
+.mobile-job-addr { font-size: 13px; color: var(--muted); margin-top: 3px; }
+.mobile-job-meta { display: grid; grid-template-columns: 1fr 1fr; border-top: 1px solid var(--border); }
+.mobile-job-meta-cell { padding: 8px 14px; }
+.mobile-job-meta-cell:first-child { border-right: 1px solid var(--border); }
+.mobile-meta-label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
+.mobile-meta-value { font-family: var(--font-mono); font-size: 12px; color: var(--text); margin-top: 2px; }
+.mobile-meta-value.red { color: var(--red); }
+.mobile-meta-value.blue { color: var(--accent2); }
+.mobile-meta-value.green { color: var(--green); }
+
+@media (max-width: 599px) {
+  .cal-week { display: none !important; }
+  .mobile-day-nav { display: flex !important; }
+  .mobile-day-body { display: flex !important; }
+}
+
 /* Day columns */
 .cal-day-row {
   display: grid;
@@ -527,6 +597,10 @@ select.form-input { cursor: pointer; }
     <button class="week-nav-btn" id="btn-next" onclick="nextWeek()">›</button>
   </div>
   <div class="cal-week" id="cal-week-body"></div>
+  <!-- Mobile: day pills nav -->
+  <div class="mobile-day-nav" id="mobile-day-nav"></div>
+  <!-- Mobile: single day body -->
+  <div class="mobile-day-body" id="mobile-day-body"></div>
 </div>
 
 
@@ -604,9 +678,8 @@ select.form-input { cursor: pointer; }
       <div style="font-size:13px;line-height:1.6;color:var(--text)" id="dm-napomena"></div>
     </div>
     <div class="modal-actions">
-      <button class="btn-primary" onclick="saveAndClose()">Spremi</button>
+      <button class="btn-primary" onclick="closeDetailDirect()">Zatvori</button>
       <button class="btn-danger" onclick="archiveJob()">Arhiviraj</button>
-      <button class="btn-secondary" onclick="closeDetailDirect()">Zatvori</button>
     </div>
     <div style="padding:0 16px 8px" id="btn-pretvori-wrap">
       <button onclick="pretvoriUMontazu()" style="width:100%;height:44px;border-radius:var(--radius-sm);background:rgba(61,126,255,0.1);color:var(--accent2);font-size:14px;font-weight:600;border:1px solid rgba(61,126,255,0.3);cursor:pointer;transition:all 0.15s">
@@ -1049,19 +1122,161 @@ function renderCalendar() {
   html += '</div></div>';
 
   document.getElementById('cal-week-body').innerHTML = html;
+  if (isMobile()) renderMobileCalendar();
+}
+
+// ── MOBILE DAY STATE ──────────────────────────────────────────────────────
+let mobileSelectedDay = null; // toDateStr of selected day
+
+function isMobile() {
+  return window.innerWidth < 600;
+}
+
+function renderMobileCalendar() {
+  const jobs = getJobs().filter(j => !j.arhiva);
+  const today = new Date(); today.setHours(0,0,0,0);
+  const weekDays = [];
+  for (let i = 0; i < 5; i++) weekDays.push(addDays(currentWeekMonday, i));
+
+  // Default selected day = today if in week, else monday
+  if (!mobileSelectedDay || !weekDays.find(d => toDateStr(d) === mobileSelectedDay)) {
+    const todayInWeek = weekDays.find(d => isSameDay(d, today));
+    mobileSelectedDay = toDateStr(todayInWeek || weekDays[0]);
+  }
+
+  // ── Day pills ──
+  const navEl = document.getElementById('mobile-day-nav');
+  navEl.innerHTML = weekDays.map(d => {
+    const ds = toDateStr(d);
+    const isActive = ds === mobileSelectedDay;
+    const isToday = isSameDay(d, today);
+    const isPast = d < today && !isToday;
+    const dayJobs = jobs.filter(j => {
+      const mp = parseDate(j.montaza_pocetak);
+      const mk = parseDate(j.montaza_kraj);
+      const izm = parseDate(j.datum_izmjere);
+      return (mp && (mk ? (d >= mp && d <= mk) : isSameDay(d, mp))) || (izm && isSameDay(izm, d));
+    });
+    const dot = dayJobs.length > 0
+      ? '<div style="width:5px;height:5px;border-radius:50%;background:' + (isActive ? '#0f1117' : 'var(--accent)') + ';margin:3px auto 0"></div>'
+      : '<div style="height:8px"></div>';
+    return '<div class="mobile-day-pill' + (isActive ? ' active' : '') + (isToday && !isActive ? ' today-pill' : '') + '" onclick="selectMobileDay('' + ds + '')">'
+      + '<div class="pill-name">' + DAYS_HR[d.getDay()] + '</div>'
+      + '<div class="pill-num">' + d.getDate() + '</div>'
+      + dot
+      + '</div>';
+  }).join('');
+
+  // ── Selected day body ──
+  const selDate = parseDate(mobileSelectedDay);
+  const isPast = selDate < today && !isSameDay(selDate, today);
+  const dayJobs = jobs.filter(j => {
+    const mp = parseDate(j.montaza_pocetak);
+    const mk = parseDate(j.montaza_kraj);
+    const izm = parseDate(j.datum_izmjere);
+    return (mp && (mk ? (selDate >= mp && selDate <= mk) : isSameDay(selDate, mp))) || (izm && isSameDay(izm, selDate));
+  });
+
+  dayJobs.sort((a,b) => {
+    const getT = j => {
+      const mp = parseDate(j.montaza_pocetak);
+      const mk = parseDate(j.montaza_kraj);
+      const inM = mp && (mk ? (selDate >= mp && selDate <= mk) : isSameDay(selDate, mp));
+      return inM ? (j.montaza_pocetak_vrijeme||'00:00') : (j.vrijeme_izmjere||'00:00');
+    };
+    return getT(a).localeCompare(getT(b));
+  });
+
+  const bodyEl = document.getElementById('mobile-day-body');
+
+  if (dayJobs.length === 0) {
+    bodyEl.innerHTML = isPast
+      ? '<div class="mobile-day-empty" style="cursor:default">Nema poslova ovaj dan</div>'
+      : '<div class="mobile-day-empty" onclick="handleEmptyClick('' + mobileSelectedDay + '')">+ Dodaj posao za ovaj dan</div>';
+    return;
+  }
+
+  bodyEl.innerHTML = dayJobs.map(j => {
+    const mp = parseDate(j.montaza_pocetak);
+    const mk = parseDate(j.montaza_kraj);
+    const izm = parseDate(j.datum_izmjere);
+    const inMont = mp && (mk ? (selDate >= mp && selDate <= mk) : isSameDay(selDate, mp));
+    const isIzm = izm && isSameDay(izm, selDate) && !inMont;
+    const noKraj = inMont && !mk;
+
+    let cardClass = noKraj ? 'no-kraj ' : '';
+    let typeLabel, timeStr, metaLeft, metaRight;
+
+    if (inMont && j.montaza_gotova) {
+      cardClass += 'gotovo';
+      typeLabel = '🔧 Montaža — gotova';
+      timeStr = j.montaza_pocetak_vrijeme || '';
+      const dayNum = daysBetween(mp, selDate)+1;
+      const total = mk ? daysBetween(mp,mk)+1 : null;
+      metaLeft = { label: 'Dan', value: total ? dayNum+'/'+total : dayNum+'/?', cls: 'green' };
+      metaRight = { label: 'Status', value: '✓ Gotovo', cls: 'green' };
+    } else if (inMont) {
+      cardClass += 'montaza';
+      typeLabel = '🔧 Montaža' + (noKraj ? ' — kraj?' : '');
+      timeStr = j.montaza_pocetak_vrijeme || '';
+      const dayNum = daysBetween(mp, selDate)+1;
+      const total = mk ? daysBetween(mp,mk)+1 : null;
+      metaLeft = { label: 'Dan', value: total ? dayNum+'/'+total : dayNum+' (kraj?)', cls: total ? '' : 'red' };
+      metaRight = { label: 'Plaćanje', value: j.status_placanja, cls: j.status_placanja==='Plaćeno'?'green':j.status_placanja==='Avans'?'blue':'red' };
+    } else {
+      cardClass += 'izmjera';
+      typeLabel = '📐 Izmjera';
+      timeStr = j.vrijeme_izmjere || '';
+      metaLeft = { label: 'Izmjera', value: j.izmjera_gotova ? '✓ Gotova' : 'Nije gotova', cls: j.izmjera_gotova?'green':'red' };
+      metaRight = { label: 'Materijal', value: j.materijal_narucen ? '✓ Naručen' : 'Nije', cls: j.materijal_narucen?'green':'red' };
+    }
+
+    const tel = j.tel ? '<a href="tel:' + j.tel + '" onclick="event.stopPropagation()" style="color:var(--accent2);font-size:12px;margin-top:4px;display:block">📞 ' + j.tel + '</a>' : '';
+
+    return '<div class="mobile-job-card ' + cardClass + '" onclick="openDetail(' + j.id + ')">'
+      + '<div class="mobile-job-top">'
+      + '<div style="display:flex;justify-content:space-between;align-items:flex-start">'
+      + '<div>'
+      + '<div class="mobile-job-name">' + j.kupac + '</div>'
+      + '<div class="mobile-job-addr">📍 ' + j.adresa + '</div>'
+      + tel
+      + '</div>'
+      + '<div style="text-align:right;flex-shrink:0">'
+      + '<div style="font-size:11px;color:var(--muted);font-weight:600">' + typeLabel + '</div>'
+      + (timeStr ? '<div style="font-family:var(--font-mono);font-size:13px;color:var(--text);margin-top:2px">⏰ ' + timeStr + '</div>' : '')
+      + '</div></div></div>'
+      + '<div class="mobile-job-meta">'
+      + '<div class="mobile-job-meta-cell"><div class="mobile-meta-label">' + metaLeft.label + '</div><div class="mobile-meta-value ' + metaLeft.cls + '">' + metaLeft.value + '</div></div>'
+      + '<div class="mobile-job-meta-cell"><div class="mobile-meta-label">' + metaRight.label + '</div><div class="mobile-meta-value ' + metaRight.cls + '">' + metaRight.value + '</div></div>'
+      + '</div>'
+      + '</div>';
+  }).join('')
+    + (isPast ? '' : '<div class="mobile-day-empty" onclick="handleEmptyClick('' + mobileSelectedDay + '')" style="margin-top:4px">+ Dodaj posao</div>');
+}
+
+function selectMobileDay(dateStr) {
+  mobileSelectedDay = dateStr;
+  renderMobileCalendar();
+  // Scroll selected pill into view
+  setTimeout(() => {
+    const nav = document.getElementById('mobile-day-nav');
+    const active = nav.querySelector('.mobile-day-pill.active');
+    if (active) active.scrollIntoView({behavior:'smooth', block:'nearest', inline:'center'});
+  }, 50);
 }
 
 // ── WEEK NAVIGATION ────────────────────────────────────────────────────────
 function prevWeek() {
   const prev = addDays(currentWeekMonday, -7);
-  if (prev >= MIN_MONDAY) { currentWeekMonday = prev; renderCalendar(); }
+  if (prev >= MIN_MONDAY) { currentWeekMonday = prev; mobileSelectedDay = null; renderCalendar(); }
 }
 function nextWeek() {
   const next = addDays(currentWeekMonday, 7);
-  if (next <= MAX_MONDAY) { currentWeekMonday = next; renderCalendar(); }
+  if (next <= MAX_MONDAY) { currentWeekMonday = next; mobileSelectedDay = null; renderCalendar(); }
 }
 function goToCurrentWeek() {
   currentWeekMonday = getMondayOf(new Date());
+  mobileSelectedDay = null;
   renderCalendar();
 }
 
@@ -1209,7 +1424,6 @@ async function toggleField(field) {
     // Update in cache immediately so render works without reload
     const { id, ...fields } = job;
     await sbUpdate(id, fields);
-    showToast('Spremljeno ✓');
   } catch(e) {
     // Revert toggle on error
     job[field] = !job[field];
@@ -1267,8 +1481,7 @@ async function saveAndClose() {
   if (job) {
     try {
       await saveJob(job);
-      showToast('Spremljeno ✓');
-    } catch(e) {
+      } catch(e) {
       showToast('Greška: ' + e.message, true);
     }
   }

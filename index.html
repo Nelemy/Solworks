@@ -1133,14 +1133,32 @@ function renderMonth() {
   document.getElementById('month-label').textContent = MONTHS_HR[currentMonth].charAt(0).toUpperCase() + MONTHS_HR[currentMonth].slice(1) + ' ' + currentMonthYear;
   document.getElementById('month-today-btn').style.display = isCurrentMonth ? 'none' : 'inline-block';
 
-  // First day of month, how many days
   const firstDay = new Date(currentMonthYear, currentMonth, 1);
   const lastDay = new Date(currentMonthYear, currentMonth + 1, 0);
   const daysInMonth = lastDay.getDate();
+  let startDow = firstDay.getDay();
+  startDow = startDow === 0 ? 6 : startDow - 1;
 
-  // Start grid on Monday (adjust so Mon=0)
-  let startDow = firstDay.getDay(); // 0=Sun
-  startDow = startDow === 0 ? 6 : startDow - 1; // Mon=0
+  // ── Pre-calculate jobs per day to find busiest day ──
+  const jobsPerDay = {};
+  for (let day = 1; day <= daysInMonth; day++) {
+    const d = new Date(currentMonthYear, currentMonth, day);
+    jobsPerDay[day] = jobs.filter(j => {
+      const mp = parseDate(j.montaza_pocetak);
+      const mk = parseDate(j.montaza_kraj);
+      const izm = parseDate(j.datum_izmjere);
+      const inMont = mp && (mk ? (d >= mp && d <= mk) : isSameDay(d, mp));
+      return inMont || (izm && isSameDay(izm, d));
+    });
+  }
+  const maxJobs = Math.max(1, ...Object.values(jobsPerDay).map(j => j.length));
+
+  // Density mode based on busiest day:
+  // 1-2: full (name + addr + time)
+  // 3:   medium (name + time, no addr)
+  // 4+:  compact (name only, show "+N more" if >3 visible)
+  const density = maxJobs <= 2 ? 'full' : maxJobs === 3 ? 'medium' : 'compact';
+  const SHOW_MAX = density === 'compact' ? 3 : 99;
 
   let html = '';
 
@@ -1152,12 +1170,13 @@ function renderMonth() {
   });
   html += '</div>';
 
-  // Calendar grid
+  // Min cell height scales with density
+  const cellMinH = density === 'full' ? '90px' : density === 'medium' ? '80px' : '70px';
+
   html += '<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px;">';
 
-  // Empty cells before first day
   for (let i = 0; i < startDow; i++) {
-    html += '<div style="min-height:80px;"></div>';
+    html += '<div style="min-height:' + cellMinH + ';"></div>';
   }
 
   for (let day = 1; day <= daysInMonth; day++) {
@@ -1166,88 +1185,86 @@ function renderMonth() {
     const isPast = d < today && !isToday;
     const isWeekend = d.getDay() === 0 || d.getDay() === 6;
     const dateStr = toDateStr(d);
-
-    // Jobs on this day
-    const dayJobs = jobs.filter(j => {
-      const mp = parseDate(j.montaza_pocetak);
-      const mk = parseDate(j.montaza_kraj);
-      const izm = parseDate(j.datum_izmjere);
-      return (mp && mk && d >= mp && d <= mk) || (izm && isSameDay(izm, d));
-    });
+    const dayJobs = jobsPerDay[day];
 
     // Sort by time
     dayJobs.sort((a,b) => {
       const getT = j => {
         const mp = parseDate(j.montaza_pocetak);
         const mk = parseDate(j.montaza_kraj);
-        const inM = mp && mk && d >= mp && d <= mk;
+        const inM = mp && (mk ? (d >= mp && d <= mk) : isSameDay(d, mp));
         return inM ? (j.montaza_pocetak_vrijeme||'00:00') : (j.vrijeme_izmjere||'00:00');
       };
       return getT(a).localeCompare(getT(b));
     });
 
-    const hasOverlap = (() => {
-      const montazeOnDay = dayJobs.filter(j => {
-        const mp = parseDate(j.montaza_pocetak);
-        const mk = parseDate(j.montaza_kraj);
-        const inM = mp && (mk ? (d >= mp && d <= mk) : isSameDay(d, mp));
-        return inM && !j.montaza_gotova;
-      });
-      return montazeOnDay.length > 1;
-    })();
+    const hasOverlap = dayJobs.filter(j => {
+      const mp = parseDate(j.montaza_pocetak);
+      const mk = parseDate(j.montaza_kraj);
+      return mp && (mk ? (d >= mp && d <= mk) : isSameDay(d, mp)) && !j.montaza_gotova;
+    }).length > 1;
 
     const bgColor = isToday ? 'rgba(232,160,39,0.08)' : isWeekend ? 'rgba(255,255,255,0.02)' : 'var(--surface)';
     const borderColor = isToday ? 'rgba(232,160,39,0.5)' : hasOverlap ? 'rgba(232,80,58,0.5)' : 'var(--border)';
-
-    const dayOnclick = isPast ? '' : 'handleEmptyClick(\''+dateStr+'\')';
-    const dayCursor = isPast ? 'default' : 'pointer';
     const dayNumColor = isToday ? 'var(--accent)' : isWeekend ? 'var(--red)' : 'var(--text)';
-    html += '<div style="min-height:80px;background:' + bgColor + ';border:1px solid ' + borderColor + ';border-radius:8px;padding:4px;cursor:' + dayCursor + '" onclick="' + (isPast ? '' : 'handleEmptyClick(\'' + dateStr + '\')') + '">';
+    const dayNumSize = density === 'compact' ? '12px' : '14px';
 
-    // Day number
-    html += '<div style="font-family:var(--font-display);font-size:14px;font-weight:700;color:' + dayNumColor + ';margin-bottom:3px;line-height:1">' + day + '</div>';
+    html += '<div style="min-height:' + cellMinH + ';background:' + bgColor + ';border:1px solid ' + borderColor + ';border-radius:8px;padding:4px;cursor:' + (isPast?'default':'pointer') + '" onclick="' + (isPast ? '' : 'handleEmptyClick(\'' + dateStr + '\')') + '">';
+    html += '<div style="font-family:var(--font-display);font-size:' + dayNumSize + ';font-weight:700;color:' + dayNumColor + ';margin-bottom:2px;line-height:1">' + day + '</div>';
 
-    // Job blocks
-    dayJobs.forEach(j => {
+    const visibleJobs = dayJobs.slice(0, SHOW_MAX);
+    const hiddenCount = dayJobs.length - visibleJobs.length;
+
+    visibleJobs.forEach(j => {
       const mp = parseDate(j.montaza_pocetak);
       const mk = parseDate(j.montaza_kraj);
       const izm = parseDate(j.datum_izmjere);
       const inMont = mp && (mk ? (d >= mp && d <= mk) : isSameDay(d, mp));
-      const isIzmjera = izm && isSameDay(izm, d) && !inMont;
 
-      let bg, border, timeStr, typeIcon;
+      let bg, border, typeIcon, timeStr;
       if (inMont && j.montaza_gotova) {
-        bg='rgba(58,184,122,0.15)'; border='rgba(58,184,122,0.4)';
-        const dayNum = daysBetween(mp,d)+1, total=daysBetween(mp,mk)+1;
-        timeStr = '✓ Dan ' + dayNum + '/' + total;
-        typeIcon = '🔧';
+        bg='rgba(58,184,122,0.15)'; border='rgba(58,184,122,0.4)'; typeIcon='🔧';
+        timeStr = j.montaza_pocetak_vrijeme || '';
       } else if (inMont) {
-        bg='rgba(232,80,58,0.15)'; border='rgba(232,80,58,0.4)';
-        const dayNum = daysBetween(mp,d)+1, total=daysBetween(mp,mk)+1;
-        const t = j.montaza_pocetak_vrijeme ? j.montaza_pocetak_vrijeme : '';
-        timeStr = (t ? t + ' · ' : '') + 'Dan ' + dayNum + '/' + total;
-        typeIcon = '🔧';
+        bg='rgba(232,80,58,0.15)'; border='rgba(232,80,58,0.4)'; typeIcon='🔧';
+        timeStr = j.montaza_pocetak_vrijeme || '';
       } else {
-        bg='rgba(61,126,255,0.15)'; border='rgba(61,126,255,0.4)';
+        bg='rgba(61,126,255,0.15)'; border='rgba(61,126,255,0.4)'; typeIcon='📐';
         timeStr = j.vrijeme_izmjere || '';
-        typeIcon = '📐';
       }
 
+      const noKraj = !j.montaza_kraj && mp;
+      const borderStyle = noKraj ? 'dashed' : 'solid';
       const addr = j.adresa.split(',')[0];
-      const noKrajM = !j.montaza_kraj && parseDate(j.montaza_pocetak);
-      const krajBadge = noKrajM ? ' <span style="font-size:9px;color:var(--accent);font-weight:700">kraj?</span>' : '';
-      const borderStyle = noKrajM ? 'dashed' : 'solid';
-      const timeRow = timeStr ? '<div style="font-size:10px;color:var(--muted);margin-top:1px">' + timeStr + '</div>' : '';
-      html += '<div onclick="event.stopPropagation();openDetail(' + j.id + ')" style="background:' + bg + ';border:1px ' + borderStyle + ' ' + border + ';border-radius:5px;padding:4px 6px;margin-bottom:3px;cursor:pointer;position:relative;">'
-            + '<div style="font-size:11px;font-weight:700;color:var(--text);line-height:1.2">' + typeIcon + ' ' + j.kupac + krajBadge + '</div>'
-            + timeRow
-            + '<div style="font-size:10px;color:var(--muted);margin-top:1px">📍 ' + addr + '</div>'
-            + '</div>';
+
+      // Padding and font size scale with density
+      const pad = density === 'compact' ? '3px 5px' : '4px 6px';
+      const nameSize = density === 'compact' ? '10px' : '11px';
+      const subSize = '10px';
+
+      let inner = '<div style="font-size:' + nameSize + ';font-weight:700;color:var(--text);line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'
+        + typeIcon + ' ' + j.kupac
+        + (noKraj ? ' <span style="font-size:9px;color:var(--accent)">kraj?</span>' : '')
+        + '</div>';
+
+      if (density !== 'compact') {
+        if (timeStr) inner += '<div style="font-size:' + subSize + ';color:var(--muted);margin-top:1px">⏰ ' + timeStr + '</div>';
+      }
+      if (density === 'full') {
+        inner += '<div style="font-size:' + subSize + ';color:var(--muted);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">📍 ' + addr + '</div>';
+      }
+
+      html += '<div onclick="event.stopPropagation();openDetail(' + j.id + ')" style="background:' + bg + ';border:1px ' + borderStyle + ' ' + border + ';border-radius:4px;padding:' + pad + ';margin-bottom:2px;cursor:pointer;overflow:hidden">'
+            + inner + '</div>';
     });
 
-    // + add button if not past and no jobs
+    // "+N više" badge
+    if (hiddenCount > 0) {
+      html += '<div onclick="event.stopPropagation()" style="font-size:10px;font-weight:600;color:var(--muted);text-align:center;padding:2px;background:var(--surface2);border-radius:4px;margin-top:1px">+ još ' + hiddenCount + '</div>';
+    }
+
     if (!isPast && dayJobs.length === 0) {
-      html += '<div style="text-align:center;color:var(--border);font-size:16px;margin-top:8px">+</div>';
+      html += '<div style="text-align:center;color:var(--border);font-size:14px;margin-top:6px">+</div>';
     }
 
     html += '</div>';

@@ -533,7 +533,11 @@ function saveJobs(j) { localStorage.setItem(STORAGE_KEY, JSON.stringify(j)); }
 function getJobs() { return loadJobs(); }
 
 // ── HELPERS ────────────────────────────────────────────────────────────────
-function parseDate(s) { return s ? new Date(s + 'T00:00:00') : null; }
+function parseDate(s) {
+  if (!s) return null;
+  const [y,m,d] = s.split('-').map(Number);
+  return new Date(y, m-1, d);
+}
 function isSameDay(a,b) { return a&&b && a.getFullYear()===b.getFullYear() && a.getMonth()===b.getMonth() && a.getDate()===b.getDate(); }
 function daysBetween(a,b) { return Math.round((b-a)/(864e5)); }
 function fmtDate(d) {

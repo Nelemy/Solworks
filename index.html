@@ -777,63 +777,71 @@ function renderCalendar() {
   html += '</div>'; // cal-grid
 
   // ── MONTAŽA SUMMARY ROW ──
-  html += '<div class="montaza-row-wrap"><div class="montaza-row-head">🔧 Montaže ovog tjedna</div><div class="montaza-row-grid"><div></div>';
-  weekDays.forEach(d => {
-    const montOnDay = jobs.filter(j => {
+  // Collect all unique jobs active this week
+  const weekMontazaJobs = [];
+  jobs.forEach(j => {
+    const mp = parseDate(j.montaza_pocetak);
+    const mk = parseDate(j.montaza_kraj);
+    if (!mp) return;
+    const activeDays = weekDays.filter(d => mk ? (d >= mp && d <= mk) : isSameDay(d, mp));
+    if (activeDays.length > 0 && !j.montaza_gotova) weekMontazaJobs.push(j);
+  });
+
+  if (weekMontazaJobs.length > 0) {
+    html += '<div class="montaza-row-wrap"><div class="montaza-row-head">🔧 Montaže ovog tjedna — ' + weekMontazaJobs.length + (weekMontazaJobs.length === 1 ? ' posao' : weekMontazaJobs.length < 5 ? ' posla' : ' poslova') + '</div>';
+    html += '<div style="padding:8px 10px;display:flex;flex-direction:column;gap:6px;">';
+    weekMontazaJobs.forEach(j => {
       const mp = parseDate(j.montaza_pocetak);
       const mk = parseDate(j.montaza_kraj);
-      return mp && (mk ? (d >= mp && d <= mk) : isSameDay(d, mp)) && !j.montaza_gotova;
+      const noKraj = !mk;
+      const startStr = mp.toLocaleDateString("hr-HR", {weekday:"short", day:"numeric", month:"numeric"});
+      const endStr = mk ? mk.toLocaleDateString("hr-HR", {weekday:"short", day:"numeric", month:"numeric"}) : '?';
+      const time = j.montaza_pocetak_vrijeme ? ' u ' + j.montaza_pocetak_vrijeme : '';
+      const totalDays = mk ? (daysBetween(mp, mk) + 1) : null;
+      const daysLabel = totalDays ? totalDays + (totalDays === 1 ? ' dan' : ' dana') : 'nepoznato trajanje';
+      html += '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;padding:8px 10px;background:rgba(232,80,58,0.08);border:1px ' + (noKraj ? 'dashed' : 'solid') + ' rgba(232,80,58,0.25);border-radius:8px;cursor:pointer" onclick="openDetail(' + j.id + ')">'
+        + '<div>'
+        + '<div style="font-size:13px;font-weight:700;color:var(--text)">' + j.kupac + '</div>'
+        + '<div style="font-size:11px;color:var(--muted);margin-top:2px">📍 ' + j.adresa + '</div>'
+        + '<div style="font-size:11px;color:var(--red);margin-top:3px">' + startStr + time + ' → ' + endStr + '</div>'
+        + '</div>'
+        + '<div style="text-align:right;flex-shrink:0">'
+        + '<div style="font-family:var(--font-mono);font-size:13px;font-weight:700;color:var(--red)">' + daysLabel + '</div>'
+        + (noKraj ? '<div style="font-size:10px;color:var(--accent);margin-top:2px">kraj?</div>' : '')
+        + '</div>'
+        + '</div>';
     });
-    if (montOnDay.length > 0) {
-      let cellHtml = '<div class="montaza-day-cell has-job" onclick="' + montOnDay.map(j => 'openDetail(' + j.id + ')').join(';') + '">';
-      montOnDay.forEach(j => {
-        const mp = parseDate(j.montaza_pocetak);
-        const mk = parseDate(j.montaza_kraj);
-        const dayNum = daysBetween(mp, d) + 1;
-        const total = mk ? daysBetween(mp, mk) + 1 : null;
-        const dayLabel = total ? 'Dan ' + dayNum + '/' + total : 'Dan ' + dayNum + ' · kraj?';
-        const time = j.montaza_pocetak_vrijeme ? j.montaza_pocetak_vrijeme + ' · ' : '';
-        const addr = j.adresa.split(',')[0];
-        cellHtml += '<div style="margin-bottom:4px;padding-bottom:4px;border-bottom:1px solid rgba(255,255,255,0.07)">'
-          + '<div class="montaza-cell-name">🔧 ' + j.kupac + '</div>'
-          + '<div class="montaza-cell-addr">📍 ' + addr + '</div>'
-          + '<div class="montaza-cell-day">' + time + dayLabel + '</div>'
-          + '</div>';
-      });
-      cellHtml += '</div>';
-      html += cellHtml;
-    } else {
-      html += '<div class="montaza-day-cell empty"></div>';
-    }
-  });
-  html += '</div></div>';
+    html += '</div></div>';
+  }
 
   // ── IZMJERE SUMMARY ROW ──
-  html += '<div class="izmjere-row-wrap" style="margin-top:6px"><div class="izmjere-row-head">📐 Izmjere ovog tjedna</div><div class="izmjere-row-grid"><div></div>';
+  const weekIzmjere = [];
   weekDays.forEach(d => {
-    const izmOnDay = jobs.filter(j => {
+    jobs.forEach(j => {
       const izm = parseDate(j.datum_izmjere);
-      return izm && isSameDay(izm, d);
+      if (izm && isSameDay(izm, d)) weekIzmjere.push({job: j, day: d});
     });
-    if (izmOnDay.length > 0) {
-      let cellHtml = '<div class="izmjere-day-cell" style="cursor:pointer" onclick="' + izmOnDay.map(j => 'openDetail(' + j.id + ')').join(';') + '">';
-      izmOnDay.forEach(j => {
-        const time = j.vrijeme_izmjere ? j.vrijeme_izmjere : '';
-        const addr = j.adresa.split(',')[0];
-        cellHtml += '<div style="margin-bottom:3px;padding-bottom:3px;border-bottom:1px solid rgba(61,126,255,0.15)">'
-          + '<div style="font-size:11px;font-weight:700;color:var(--text)">📐 ' + j.kupac + '</div>'
-          + '<div style="font-size:10px;color:var(--muted);margin-top:1px">📍 ' + addr + '</div>'
-          + (time ? '<div style="font-size:10px;color:var(--accent2);margin-top:1px">⏰ ' + time + '</div>' : '')
-          + (j.izmjera_gotova ? '<div style="font-size:10px;color:var(--green);margin-top:1px">✓ Gotova</div>' : '')
-          + '</div>';
-      });
-      cellHtml += '</div>';
-      html += cellHtml;
-    } else {
-      html += '<div class="izmjere-day-cell empty"></div>';
-    }
   });
-  html += '</div></div>';
+
+  if (weekIzmjere.length > 0) {
+    html += '<div class="izmjere-row-wrap" style="margin-top:6px"><div class="izmjere-row-head">📐 Izmjere ovog tjedna — ' + weekIzmjere.length + (weekIzmjere.length === 1 ? ' izmjera' : weekIzmjere.length < 5 ? ' izmjere' : ' izmjera') + '</div>';
+    html += '<div style="padding:8px 10px;display:flex;flex-direction:column;gap:6px;">';
+    weekIzmjere.forEach(({job: j, day: d}) => {
+      const dayStr = d.toLocaleDateString("hr-HR", {weekday:"long", day:"numeric", month:"numeric"});
+      const time = j.vrijeme_izmjere ? ' u ' + j.vrijeme_izmjere : '';
+      html += '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;padding:8px 10px;background:rgba(61,126,255,0.08);border:1px solid rgba(61,126,255,0.25);border-radius:8px;cursor:pointer" onclick="openDetail(' + j.id + ')">'
+        + '<div>'
+        + '<div style="font-size:13px;font-weight:700;color:var(--text)">' + j.kupac + '</div>'
+        + '<div style="font-size:11px;color:var(--muted);margin-top:2px">📍 ' + j.adresa + '</div>'
+        + '</div>'
+        + '<div style="text-align:right;flex-shrink:0">'
+        + '<div style="font-family:var(--font-mono);font-size:11px;color:var(--accent2);font-weight:600">' + dayStr + time + '</div>'
+        + '<div style="font-size:11px;margin-top:3px">' + (j.izmjera_gotova ? '<span style="color:var(--green)">✓ Gotova</span>' : '<span style="color:var(--muted)">Nije gotova</span>') + '</div>'
+        + '</div>'
+        + '</div>';
+    });
+    html += '</div></div>';
+  }
 
   // Overlap row (only if there are overlaps this week)
   const hasAnyOverlap = weekDays.some(d => {

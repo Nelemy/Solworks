@@ -666,28 +666,72 @@ select.form-input { cursor: pointer; }
 </div>
 
 <script>
+// ── SUPABASE CONFIG ───────────────────────────────────────────────────────
+const SB_URL = 'https://ysezqohdfvanixpzdfoh.supabase.co';
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlzZXpxb2hkZnZhbml4cHpkZm9oIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkxMDEzMzMsImV4cCI6MjA5NDY3NzMzM30.Via-avx6eNxikPUAJuXVRkkzQ7Gza-44WhHZYPbodEM';
+
+const sbHeaders = {
+  'Content-Type': 'application/json',
+  'apikey': SB_KEY,
+  'Authorization': 'Bearer ' + SB_KEY,
+  'Prefer': 'return=representation'
+};
+
+async function sbFetch(path, options = {}) {
+  const res = await fetch(SB_URL + '/rest/v1/' + path, {
+    headers: sbHeaders,
+    ...options
+  });
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error('Supabase error: ' + err);
+  }
+  const text = await res.text();
+  return text ? JSON.parse(text) : [];
+}
+
 // ── DATA ──────────────────────────────────────────────────────────────────
-const STORAGE_KEY = 'solworks_jobs_v2';
 const DAYS_HR = ['ned','pon','uto','sri','čet','pet','sub'];
 const DAYS_FULL = ['Nedjelja','Ponedjeljak','Utorak','Srijeda','Četvrtak','Petak','Subota'];
 const MONTHS_HR = ['siječanj','veljača','ožujak','travanj','svibanj','lipanj','srpanj','kolovoz','rujan','listopad','studeni','prosinac'];
 const MONTHS_SHORT = ['sij','velj','ožu','tra','svi','lip','srp','kol','ruj','lis','stu','pro'];
 
-const SAMPLE_JOBS = [
-  { id:1, kupac:'Horvat Ivan', adresa:'Varaždin, Ul. Matice 12', tel:'091 234 5678', iznos:2400, status_placanja:'Avans', avans:500, datum_izmjere:'2025-05-12', vrijeme_izmjere:'09:00', montaza_pocetak:'2025-05-19', montaza_kraj:'2025-05-21', montaza_pocetak_vrijeme:'07:00', izmjera_gotova:true, materijal_narucen:true, montaza_gotova:false, napomena:'Kupac rekao 40m, izmjerom utvrđeno 38m', arhiva:false, created:'2025-05-10' },
-  { id:2, kupac:'Kovač Marija', adresa:'Ludbreg, Trg sv. Trojstva 5', tel:'098 765 4321', iznos:1850, status_placanja:'Neplaćeno', avans:0, datum_izmjere:'2025-05-20', vrijeme_izmjere:'14:00', montaza_pocetak:'2025-05-26', montaza_kraj:'2025-05-27', montaza_pocetak_vrijeme:'07:00', izmjera_gotova:false, materijal_narucen:false, montaza_gotova:false, napomena:'Na putu doma — izmjera utorak', arhiva:false, created:'2025-05-14' },
-  { id:3, kupac:'Marković Stjepan', adresa:'Čakovec, Frankopanska 3', tel:'095 111 2233', iznos:3200, status_placanja:'Neplaćeno', avans:0, datum_izmjere:'2025-05-22', vrijeme_izmjere:'11:00', montaza_pocetak:'2025-05-26', montaza_kraj:'2025-05-28', montaza_pocetak_vrijeme:'10:00', izmjera_gotova:false, materijal_narucen:false, montaza_gotova:false, napomena:'⚠️ Provjeri overlap s Kovač', arhiva:false, created:'2025-05-15' },
-  { id:4, kupac:'Petrić Ana', adresa:'Ivanec, Kolodvorska 8', tel:'092 444 5566', iznos:980, status_placanja:'Plaćeno', avans:980, datum_izmjere:'2025-05-15', vrijeme_izmjere:'13:30', montaza_pocetak:'2025-06-02', montaza_kraj:'2025-06-02', montaza_pocetak_vrijeme:'08:00', izmjera_gotova:true, materijal_narucen:false, montaza_gotova:false, napomena:'Manja ograda, 1 dan posla', arhiva:false, created:'2025-05-13' },
-  { id:5, kupac:'Novak Drago', adresa:'Varaždinske Toplice', tel:'091 777 8899', iznos:4100, status_placanja:'Plaćeno', avans:4100, datum_izmjere:'2025-05-05', vrijeme_izmjere:'', montaza_pocetak:'2025-05-12', montaza_kraj:'2025-05-15', montaza_pocetak_vrijeme:'07:00', izmjera_gotova:true, materijal_narucen:true, montaza_gotova:true, napomena:'Kasnilo 1 dan zbog kiše', arhiva:true, created:'2025-05-01' },
-];
+// ── In-memory cache ──
+let _jobsCache = null;
 
-function loadJobs() {
-  try { const r = localStorage.getItem(STORAGE_KEY); if (r) return JSON.parse(r); } catch(e) {}
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(SAMPLE_JOBS));
-  return JSON.parse(JSON.stringify(SAMPLE_JOBS));
+async function loadJobs() {
+  const data = await sbFetch('poslovi?order=created.desc,id.desc');
+  _jobsCache = data;
+  return data;
 }
-function saveJobs(j) { localStorage.setItem(STORAGE_KEY, JSON.stringify(j)); }
-function getJobs() { return loadJobs(); }
+
+async function saveJob(job) {
+  const { id, ...fields } = job;
+  if (id && typeof id === 'number' && id > 0) {
+    // Update existing
+    await sbFetch('poslovi?id=eq.' + id, {
+      method: 'PATCH',
+      body: JSON.stringify(fields)
+    });
+  } else {
+    // Insert new
+    const result = await sbFetch('poslovi', {
+      method: 'POST',
+      body: JSON.stringify(fields)
+    });
+    if (result && result[0]) job.id = result[0].id;
+  }
+  _jobsCache = null; // invalidate cache
+}
+
+async function deleteJobById(id) {
+  await sbFetch('poslovi?id=eq.' + id, { method: 'DELETE' });
+  _jobsCache = null;
+}
+
+function getJobs() {
+  return _jobsCache || [];
+}
 
 // ── HELPERS ────────────────────────────────────────────────────────────────
 function parseDate(s) {
@@ -719,23 +763,23 @@ const MIN_MONDAY = getMondayOf(addDays(new Date(), -7));
 // Max = ~13 weeks forward (current week + 3 months)
 const MAX_MONDAY = getMondayOf(addDays(new Date(), 91));
 
-// ── AUTO-ARCHIVE: jobs whose montaza_kraj ended before last week's Monday ──
-function autoArchiveOld() {
+// ── AUTO-ARCHIVE: jobs whose montaza_kraj ended before last weeks Monday ──
+async function autoArchiveOld() {
   const jobs = getJobs();
-  let changed = false;
-  jobs.forEach(j => {
-    if (j.arhiva) return;
+  const toArchive = jobs.filter(j => {
+    if (j.arhiva) return false;
     const mk = parseDate(j.montaza_kraj);
-    if (mk && mk < MIN_MONDAY) {
-      j.arhiva = true; changed = true;
-    }
+    return mk && mk < MIN_MONDAY;
   });
-  if (changed) saveJobs(jobs);
+  for (const j of toArchive) {
+    j.arhiva = true;
+    await saveJob(j);
+  }
+  if (toArchive.length > 0) _jobsCache = null;
 }
 
 // ── RENDER CALENDAR WEEK ────────────────────────────────────────────────────
 function renderCalendar() {
-  autoArchiveOld();
   const jobs = getJobs().filter(j => !j.arhiva);
   const today = new Date(); today.setHours(0,0,0,0);
 
@@ -995,7 +1039,6 @@ function handleEmptyClick(dateStr) {
 
 // ── RENDER ACTIVE LIST ─────────────────────────────────────────────────────
 function renderActive() {
-  autoArchiveOld();
   const jobs = getJobs();
   const active = jobs.filter(j => !j.arhiva).sort((a,b) => {
     const ap = parseDate(a.montaza_pocetak), bp = parseDate(b.montaza_pocetak);
@@ -1076,9 +1119,9 @@ function switchTab(tab) {
   document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
   document.getElementById('view-'+tab).classList.add('active');
   if (tab==='aktivni') renderActive();
-  if (tab==='kalendar') renderCalendar();
-  if (tab==='mjesec') renderMonth();
-  if (tab==='arhiva') renderArchive();
+  else if (tab==='kalendar') renderCalendar();
+  else if (tab==='mjesec') renderMonth();
+  else if (tab==='arhiva') renderArchive();
 }
 
 // ── DETAIL MODAL ───────────────────────────────────────────────────────────
@@ -1117,29 +1160,41 @@ function toggleField(field) {
   if (!job) return;
   job[field] = !job[field];
   document.getElementById(map[field]).classList.toggle('on', job[field]);
-  saveJobs(jobs);
+  saveJob(job).catch(e => showToast('Greška pri spremanju: ' + e.message, true));
 }
 
-function deleteJob() {
+async function deleteJob() {
   if (!confirm('Trajno izbrisati ovaj posao? Ova radnja se ne može poništiti.')) return;
-  const jobs = getJobs().filter(j => j.id !== currentJobId);
-  saveJobs(jobs);
+  await deleteJobById(currentJobId);
   closeDetailDirect();
+  await reloadAndRender();
 }
 
 function archiveJob() {
   if (!confirm('Arhivirati ovaj posao?')) return;
   const jobs = getJobs();
   const job = jobs.find(j=>j.id===currentJobId);
-  if (job) { job.arhiva = true; saveJobs(jobs); }
+  if (job) { job.arhiva = true; saveJob(job).catch(console.error); }
   closeDetailDirect();
 }
 
-function saveAndClose() { closeDetailDirect(); }
+async function saveAndClose() {
+  const jobs = getJobs();
+  const job = jobs.find(j=>j.id===currentJobId);
+  if (job) {
+    try {
+      await saveJob(job);
+      showToast('Spremljeno ✓');
+    } catch(e) {
+      showToast('Greška: ' + e.message, true);
+    }
+  }
+  closeDetailDirect();
+  await reloadAndRender();
+}
 function closeDetail(e) { if (e.target===document.getElementById('detail-modal')) closeDetailDirect(); }
 function closeDetailDirect() {
   document.getElementById('detail-modal').classList.remove('open');
-  renderCalendar();
 }
 
 // ── ADD MODAL ──────────────────────────────────────────────────────────────
@@ -1170,31 +1225,38 @@ function closeAddModal() {
     prefillDate = null;
 }
 
-function addJob() {
+async function addJob() {
   const kupac = document.getElementById('f-kupac').value.trim();
   const adresa = document.getElementById('f-adresa').value.trim();
   if (!kupac||!adresa) { alert('Unesite ime kupca i adresu.'); return; }
-  const jobs = getJobs();
-  const newId = Math.max(0,...jobs.map(j=>j.id))+1;
-  jobs.unshift({
-    id:newId, kupac, adresa,
-    tel: document.getElementById('f-tel').value.trim(),
-    iznos: parseFloat(document.getElementById('f-iznos').value)||0,
-    status_placanja: document.getElementById('f-plac').value,
-    avans: parseFloat(document.getElementById('f-avans').value)||0,
-    datum_izmjere: document.getElementById('f-izm').value||null,
-    vrijeme_izmjere: document.getElementById('f-izm-time').value||'',
-    montaza_pocetak: document.getElementById('f-mont-poc').value||null,
-    montaza_pocetak_vrijeme: document.getElementById('f-mont-poc-time').value||'',
-    montaza_kraj: document.getElementById('f-mont-kraj').value||null,
-    izmjera_gotova:false, materijal_narucen:false, montaza_gotova:false,
-    napomena: document.getElementById('f-napomena').value.trim(),
-    arhiva:false,
-    created: toDateStr(new Date())
-  });
-  saveJobs(jobs);
-  closeAddModal();
-  renderCalendar();
+  const btn = document.querySelector('#add-modal .btn-primary');
+  btn.textContent = 'Sprema...'; btn.disabled = true;
+  try {
+    const newJob = {
+      kupac, adresa,
+      tel: document.getElementById('f-tel').value.trim(),
+      iznos: parseFloat(document.getElementById('f-iznos').value)||0,
+      status_placanja: document.getElementById('f-plac').value,
+      avans: parseFloat(document.getElementById('f-avans').value)||0,
+      datum_izmjere: document.getElementById('f-izm').value||null,
+      vrijeme_izmjere: document.getElementById('f-izm-time').value||null,
+      montaza_pocetak: document.getElementById('f-mont-poc').value||null,
+      montaza_pocetak_vrijeme: document.getElementById('f-mont-poc-time').value||null,
+      montaza_kraj: document.getElementById('f-mont-kraj').value||null,
+      izmjera_gotova:false, materijal_narucen:false, montaza_gotova:false,
+      napomena: document.getElementById('f-napomena').value.trim()||null,
+      arhiva:false,
+      created: toDateStr(new Date())
+    };
+    await saveJob(newJob);
+    closeAddModal();
+    await reloadAndRender();
+    showToast('Posao dodan ✓');
+  } catch(e) {
+    showToast('Greška: ' + e.message, true);
+  } finally {
+    btn.textContent = 'Dodaj posao'; btn.disabled = false;
+  }
 }
 
 
@@ -1219,7 +1281,6 @@ function goToCurrentMonth() {
 }
 
 function renderMonth() {
-  autoArchiveOld();
   const jobs = getJobs().filter(j => !j.arhiva);
   const today = new Date(); today.setHours(0,0,0,0);
 
@@ -1368,8 +1429,66 @@ function renderMonth() {
   document.getElementById('cal-month-body').innerHTML = html;
 }
 
+// ── HELPERS ───────────────────────────────────────────────────────────────
+async function reloadAndRender() {
+  await loadJobs();
+  const activeTab = document.querySelector('.tab.active');
+  const tabs = ['aktivni','kalendar','mjesec','arhiva'];
+  const idx = [...document.querySelectorAll('.tab')].indexOf(activeTab);
+  const tab = tabs[idx] || 'kalendar';
+  if (tab==='aktivni') renderActive();
+  else if (tab==='kalendar') renderCalendar();
+  else if (tab==='mjesec') renderMonth();
+  else if (tab==='arhiva') renderArchive();
+}
+
+function showToast(msg, isError=false) {
+  let t = document.getElementById('toast');
+  if (!t) {
+    t = document.createElement('div');
+    t.id = 'toast';
+    t.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);padding:10px 18px;border-radius:8px;font-size:13px;font-weight:600;z-index:999;transition:opacity 0.3s;pointer-events:none;white-space:nowrap';
+    document.body.appendChild(t);
+  }
+  t.textContent = msg;
+  t.style.background = isError ? 'var(--red)' : 'var(--green)';
+  t.style.color = '#fff';
+  t.style.opacity = '1';
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => { t.style.opacity = '0'; }, 2500);
+}
+
+function showLoading(msg) {
+  let el = document.getElementById('loading-screen');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'loading-screen';
+    el.style.cssText = 'position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;gap:12px';
+    el.innerHTML = '<div style="font-family:var(--font-display);font-size:22px;font-weight:800;color:var(--text)">Sol<span style='color:var(--accent)'>works</span></div><div style="font-size:13px;color:var(--muted)" id="loading-msg">Učitavanje...</div>';
+    document.body.appendChild(el);
+  }
+  const msgEl = document.getElementById('loading-msg'); if(msgEl) msgEl.textContent = msg || 'Učitavanje...';
+  el.style.display = 'flex';
+}
+function hideLoading() {
+  const el = document.getElementById('loading-screen');
+  if (el) el.style.display = 'none';
+}
+
 // ── INIT ───────────────────────────────────────────────────────────────────
-renderCalendar();
+(async () => {
+  showLoading('Učitavanje poslova...');
+  try {
+    await loadJobs();
+    await autoArchiveOld();
+    renderCalendar();
+  } catch(e) {
+    showLoading('Greška pri povezivanju s bazom. Provjeri internet.');
+    console.error(e);
+    return;
+  }
+  hideLoading();
+})();
 </script>
 </body>
 </html>

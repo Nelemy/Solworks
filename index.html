@@ -1670,7 +1670,8 @@ function renderMonth() {
     const dayNumColor = isToday ? 'var(--accent)' : isWeekend ? 'var(--red)' : 'var(--text)';
     const dayNumSize = density === 'compact' ? '12px' : '14px';
 
-    html += '<div style="min-height:' + cellMinH + ';background:' + bgColor + ';border:1px solid ' + borderColor + ';border-radius:8px;padding:4px;cursor:' + (isPast?'default':'pointer') + '" onclick="' + (isPast ? '' : 'handleEmptyClick(\'' + dateStr + '\')') + '">';
+    const monthCellOnclick = isPast ? '' : ' onclick="handleEmptyClick(this.dataset.date)" data-date="' + dateStr + '"';
+    html += '<div style="min-height:' + cellMinH + ';background:' + bgColor + ';border:1px solid ' + borderColor + ';border-radius:8px;padding:4px;cursor:' + (isPast?'default':'pointer') + '"' + monthCellOnclick + '>';
     html += '<div style="font-family:var(--font-display);font-size:' + dayNumSize + ';font-weight:700;color:' + dayNumColor + ';margin-bottom:2px;line-height:1">' + day + '</div>';
 
     const visibleJobs = dayJobs.slice(0, SHOW_MAX);

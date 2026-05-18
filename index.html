@@ -538,6 +538,7 @@ function parseDate(s) {
   const [y,m,d] = s.split('-').map(Number);
   return new Date(y, m-1, d);
 }
+function toDateStr(d) { var y=d.getFullYear(),m=String(d.getMonth()+1).padStart(2,"0"),day=String(d.getDate()).padStart(2,"0"); return y+"-"+m+"-"+day; }
 function isSameDay(a,b) { return a&&b && a.getFullYear()===b.getFullYear() && a.getMonth()===b.getMonth() && a.getDate()===b.getDate(); }
 function daysBetween(a,b) { return Math.round((b-a)/(864e5)); }
 function fmtDate(d) {
@@ -611,7 +612,7 @@ function renderCalendar() {
   weekDays.forEach(d => {
     const isToday = isSameDay(d, today);
     const isPast = d < today && !isToday;
-    html += `<div class="cal-day-header ${isToday?'today':''} ${isPast?'past':''}" onclick="handleDayClick('${d.toISOString().split('T')[0]}')">
+    html += `<div class="cal-day-header ${isToday?'today':''} ${isPast?'past':''}" onclick="handleDayClick('${toDateStr(d)}')">
       <div class="cal-day-name">${DAYS_HR[d.getDay()]}</div>
       <div class="cal-day-num">${d.getDate()}</div>
     </div>`;
@@ -624,7 +625,7 @@ function renderCalendar() {
 
   weekDays.forEach(d => {
     const isPast = d < today && !isSameDay(d, today);
-    const dateStr = d.toISOString().split('T')[0];
+    const dateStr = toDateStr(d);
 
     // Find jobs active on this day
     const dayJobs = jobs.filter(j => {
@@ -763,9 +764,6 @@ function handleDayClick(dateStr) {
   openAddModal(dateStr);
 }
 function handleEmptyClick(dateStr) {
-  const d = parseDate(dateStr);
-  const today = new Date(); today.setHours(0,0,0,0);
-  if (d < today) return; // past = no action
   openAddModal(dateStr);
 }
 
@@ -953,7 +951,7 @@ function addJob() {
     izmjera_gotova:false, materijal_narucen:false, montaza_gotova:false,
     napomena: document.getElementById('f-napomena').value.trim(),
     arhiva:false,
-    created: new Date().toISOString().split('T')[0]
+    created: toDateStr(new Date())
   });
   saveJobs(jobs);
   closeAddModal();

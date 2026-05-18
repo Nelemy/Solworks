@@ -370,7 +370,7 @@ select.form-input { cursor: pointer; }
 <!-- TOP BAR -->
 <div class="topbar">
   <div class="topbar-logo">Sol<span>works</span></div>
-  <button class="btn-add" onclick="openAddModal()">+ Novi posao</button>
+  <button class="btn-add" onclick="openAddModal(); event.stopPropagation()">+ Novi posao</button>
 </div>
 
 <!-- TABS -->
@@ -420,7 +420,7 @@ select.form-input { cursor: pointer; }
 </div>
 
 <!-- ══ DETAIL MODAL ══ -->
-<div class="modal-overlay" id="detail-modal" onclick="closeDetail(event)">
+<div class="modal-overlay" id="detail-modal" onmousedown="if(event.target===this)closeDetailDirect()">
   <div class="modal" id="detail-modal-inner">
     <div class="modal-handle"></div>
     <div class="modal-header">
@@ -464,7 +464,7 @@ select.form-input { cursor: pointer; }
 </div>
 
 <!-- ══ ADD JOB MODAL ══ -->
-<div class="modal-overlay" id="add-modal" onclick="closeAddModal(event)">
+<div class="modal-overlay" id="add-modal" onmousedown="if(event.target===this)closeAddModal()">
   <div class="modal">
     <div class="modal-handle"></div>
     <div class="modal-header">
@@ -921,8 +921,7 @@ function openAddModal(prefillDateStr) {
   document.getElementById('add-modal').classList.add('open');
 }
 
-function closeAddModal(e) {
-  if (!e || e.target===document.getElementById('add-modal')) {
+function closeAddModal() {
     document.getElementById('add-modal').classList.remove('open');
     ['f-kupac','f-adresa','f-tel','f-iznos','f-avans','f-izm','f-mont-poc','f-mont-kraj','f-napomena'].forEach(id=>{
       document.getElementById(id).value='';
@@ -930,7 +929,6 @@ function closeAddModal(e) {
     document.getElementById('f-plac').value='Neplaćeno';
     document.getElementById('prefill-hint').classList.remove('visible');
     prefillDate = null;
-  }
 }
 
 function addJob() {

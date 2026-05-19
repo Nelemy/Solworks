@@ -1633,23 +1633,42 @@ function closeDetailDirect() {
 function openAddModal(prefillDateStr) {
   prefillDate = prefillDateStr || null;
   const hint = document.getElementById('prefill-hint');
+
   if (prefillDate) {
     const d = parseDate(prefillDate);
     const label = d.toLocaleDateString('hr-HR',{weekday:'long',day:'numeric',month:'long'});
     hint.textContent = '📅 Dodaješ posao za ' + label;
     hint.classList.add('visible');
-    document.getElementById('f-mont-poc').value = prefillDate;
-    document.getElementById('f-mont-poc-time').value = '07:00';
   } else {
     hint.classList.remove('visible');
-    document.getElementById('f-mont-poc').value = '';
   }
+
   document.getElementById('add-modal').classList.add('open');
   updateTipForm();
+  // Fill date into correct field based on currently selected tip
+  if (prefillDate) applyPrefillDate();
+}
+
+function applyPrefillDate() {
+  if (!prefillDate) return;
+  const tip = document.querySelector('input[name="tip_posla"]:checked')?.value || 'izmjera';
+  // Clear both first
+  document.getElementById('f-izm').value = '';
+  document.getElementById('f-mont-poc').value = '';
+  document.getElementById('f-mont-poc-time').value = '';
+  if (tip === 'izmjera') {
+    document.getElementById('f-izm').value = prefillDate;
+  } else {
+    document.getElementById('f-mont-poc').value = prefillDate;
+    document.getElementById('f-mont-poc-time').value = '07:00';
+  }
 }
 
 function updateTipForm() {
-  // No fields to hide/show — all always visible
+  // Re-apply prefill date to correct field when tip changes
+  if (prefillDate && document.getElementById('add-modal').classList.contains('open')) {
+    applyPrefillDate();
+  }
 }
 
 function closeAddModal() {

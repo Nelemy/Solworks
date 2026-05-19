@@ -679,6 +679,7 @@ select.form-input { cursor: pointer; }
     </div>
     <div class="modal-actions">
       <button class="btn-primary" onclick="closeDetailDirect()">Zatvori</button>
+      <button onclick="openEditModal()" style="height:44px;padding:0 14px;border-radius:var(--radius-sm);background:rgba(232,160,39,0.1);color:var(--accent);font-size:14px;font-weight:600;border:1px solid rgba(232,160,39,0.3);cursor:pointer">✏️ Uredi</button>
       <button class="btn-danger" onclick="archiveJob()">Arhiviraj</button>
     </div>
     <div style="padding:0 16px 8px" id="btn-pretvori-wrap">
@@ -688,6 +689,68 @@ select.form-input { cursor: pointer; }
     </div>
     <div style="padding:0 16px 16px">
       <button class="btn-delete" onclick="deleteJob()">🗑 Izbriši posao</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ EDIT JOB MODAL ══ -->
+<div class="modal-overlay" id="edit-modal" onmousedown="if(event.target===this)closeEditModal()">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <div class="modal-title">Uredi posao</div>
+      <div class="modal-subtitle" id="edit-subtitle"></div>
+    </div>
+    <div class="modal-section">
+      <div class="modal-section-title">Tip posla</div>
+      <div style="display:flex;gap:8px">
+        <label style="flex:1;display:flex;align-items:center;gap:8px;padding:10px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);cursor:pointer" id="edit-tip-izmjera-label">
+          <input type="radio" name="edit_tip_posla" id="edit-tip-izmjera" value="izmjera" style="accent-color:var(--accent2)" onchange="updateEditTipForm()">
+          <span style="font-size:13px">📐 Izmjera</span>
+        </label>
+        <label style="flex:1;display:flex;align-items:center;gap:8px;padding:10px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);cursor:pointer" id="edit-tip-montaza-label">
+          <input type="radio" name="edit_tip_posla" id="edit-tip-montaza" value="montaza" onchange="updateEditTipForm()">
+          <span style="font-size:13px">🔧 Montaža</span>
+        </label>
+      </div>
+    </div>
+    <div class="modal-section">
+      <div class="modal-section-title">Kupac</div>
+      <div class="form-group"><label class="form-label">Ime i prezime *</label><input class="form-input" id="e-kupac" type="text"></div>
+      <div class="form-group"><label class="form-label">Adresa *</label><input class="form-input" id="e-adresa" type="text"></div>
+      <div class="form-group"><label class="form-label">Telefon</label><input class="form-input" id="e-tel" type="tel"></div>
+    </div>
+    <div class="modal-section">
+      <div class="modal-section-title">Financije</div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Iznos ponude (€)</label><input class="form-input" id="e-iznos" type="number" inputmode="numeric"></div>
+        <div class="form-group"><label class="form-label">Status plaćanja</label>
+          <select class="form-input" id="e-plac">
+            <option value="Neplaćeno">Neplaćeno</option>
+            <option value="Avans">Avans primljen</option>
+            <option value="Plaćeno">Plaćeno u cijelosti</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group"><label class="form-label">Avans iznos (€)</label><input class="form-input" id="e-avans" type="number" inputmode="numeric"></div>
+    </div>
+    <div class="modal-section">
+      <div class="modal-section-title">Termini</div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Datum izmjere</label><input class="form-input" id="e-izm" type="date"></div>
+        <div class="form-group"><label class="form-label">Vrijeme izmjere</label><input class="form-input" id="e-izm-time" type="time"></div>
+      </div>
+      <div style="height:1px;background:var(--border);margin:6px 0 10px;opacity:0.5"></div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Montaža početak</label><input class="form-input" id="e-mont-poc" type="date"></div>
+        <div class="form-group"><label class="form-label">Početak u</label><input class="form-input" id="e-mont-poc-time" type="time"></div>
+      </div>
+      <div class="form-group"><label class="form-label">Montaža kraj (procjena)</label><input class="form-input" id="e-mont-kraj" type="date"></div>
+      <div class="form-group"><label class="form-label">Napomena</label><input class="form-input" id="e-napomena" type="text"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-primary" id="edit-save-btn" onclick="saveEdit()">Spremi promjene</button>
+      <button class="btn-secondary" onclick="closeEditModal()">Odustani</button>
     </div>
   </div>
 </div>
@@ -1448,6 +1511,89 @@ function pretvoriUMontazu() {
     hint.textContent = '🔧 Montaža iz izmjere — ' + job.kupac + '. Dodaj datume montaže.';
     hint.classList.add('visible');
   }, 100);
+}
+
+function updateEditTipForm() {
+  // Both sections always visible - no hiding needed
+}
+
+function openEditModal() {
+  const job = getJobs().find(j => j.id === currentJobId);
+  if (!job) return;
+
+  document.getElementById('edit-subtitle').textContent = job.kupac + ' · ' + job.adresa;
+
+  // Set tip
+  const tip = job.tip_posla || 'izmjera';
+  document.getElementById('edit-tip-izmjera').checked = tip === 'izmjera';
+  document.getElementById('edit-tip-montaza').checked = tip === 'montaza';
+
+  // Fill fields
+  document.getElementById('e-kupac').value = job.kupac || '';
+  document.getElementById('e-adresa').value = job.adresa || '';
+  document.getElementById('e-tel').value = job.tel || '';
+  document.getElementById('e-iznos').value = job.iznos || '';
+  document.getElementById('e-plac').value = job.status_placanja || 'Neplaćeno';
+  document.getElementById('e-avans').value = job.avans || '';
+  document.getElementById('e-izm').value = job.datum_izmjere || '';
+  document.getElementById('e-izm-time').value = job.vrijeme_izmjere || '';
+  document.getElementById('e-mont-poc').value = job.montaza_pocetak || '';
+  document.getElementById('e-mont-poc-time').value = job.montaza_pocetak_vrijeme || '';
+  document.getElementById('e-mont-kraj').value = job.montaza_kraj || '';
+  document.getElementById('e-napomena').value = job.napomena || '';
+
+  document.getElementById('edit-modal').classList.add('open');
+}
+
+function closeEditModal() {
+  document.getElementById('edit-modal').classList.remove('open');
+}
+
+async function saveEdit() {
+  const kupac = document.getElementById('e-kupac').value.trim();
+  const adresa = document.getElementById('e-adresa').value.trim();
+  if (!kupac || !adresa) { alert('Unesite ime kupca i adresu.'); return; }
+
+  const btn = document.getElementById('edit-save-btn');
+  btn.textContent = 'Sprema...'; btn.disabled = true;
+
+  try {
+    const jobs = getJobs();
+    const job = jobs.find(j => j.id === currentJobId);
+    if (!job) return;
+
+    const updated = {
+      ...job,
+      tip_posla: document.querySelector('input[name="edit_tip_posla"]:checked')?.value || job.tip_posla,
+      kupac,
+      adresa,
+      tel: document.getElementById('e-tel').value.trim(),
+      iznos: parseFloat(document.getElementById('e-iznos').value) || 0,
+      status_placanja: document.getElementById('e-plac').value,
+      avans: parseFloat(document.getElementById('e-avans').value) || 0,
+      datum_izmjere: document.getElementById('e-izm').value || null,
+      vrijeme_izmjere: document.getElementById('e-izm-time').value || null,
+      montaza_pocetak: document.getElementById('e-mont-poc').value || null,
+      montaza_pocetak_vrijeme: document.getElementById('e-mont-poc-time').value || null,
+      montaza_kraj: document.getElementById('e-mont-kraj').value || null,
+      napomena: document.getElementById('e-napomena').value.trim() || null,
+    };
+
+    // Update in cache
+    const idx = jobs.findIndex(j => j.id === currentJobId);
+    if (idx !== -1) jobs[idx] = updated;
+    _jobsCache = jobs;
+
+    await sbUpdate(currentJobId, updated);
+    showToast('Promjene spremljene ✓');
+    closeEditModal();
+    closeDetailDirect();
+    await reloadAndRender();
+  } catch(e) {
+    showToast('Greška: ' + e.message, true);
+  } finally {
+    btn.textContent = 'Spremi promjene'; btn.disabled = false;
+  }
 }
 
 async function deleteJob() {

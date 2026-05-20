@@ -1063,19 +1063,19 @@ function renderCalendar() {
 
         let sub = '';
         if (inMont && !j.montaza_gotova) {
-          const dayNum = daysBetween(mp, d) + 1;
-          const t = j.montaza_pocetak_vrijeme ? ` · ${j.montaza_pocetak_vrijeme}` : '';
-          if (mk) {
-            const total = daysBetween(mp, mk) + 1;
-            sub = `Dan ${dayNum}/${total}${t}`;
+          const isFirstDay = isSameDay(d, mp);
+          if (isFirstDay) {
+            // First day: show start time
+            sub = j.montaza_pocetak_vrijeme || '';
           } else {
-            sub = `Dan ${dayNum}${t} · kraj?`;
+            // Other days: nothing - they work all day, no info needed
+            sub = '';
           }
         } else if (inMont && j.montaza_gotova) {
-          sub = '✓ Gotovo';
+          sub = '✓';
         } else {
-          const tIzm = j.vrijeme_izmjere ? ` ${j.vrijeme_izmjere}` : '';
-          sub = `📐 Izmjera${tIzm}`;
+          const tIzm = j.vrijeme_izmjere ? j.vrijeme_izmjere : '';
+          sub = '📐' + (tIzm ? ' ' + tIzm : '');
         }
 
         // Check overlap
@@ -1366,6 +1366,34 @@ function calcEndDate(startDate, workingDays, job) {
   return d;
 }
 
+// Count working days between start and end for a job
+function countWorkingDays(job) {
+  const mp = parseDate(job.montaza_pocetak);
+  const mk = parseDate(job.montaza_kraj);
+  if (!mp || !mk) return null;
+  let count = 0;
+  let d = new Date(mp);
+  while (d <= mk) {
+    if (isWorkingDay(d, job)) count++;
+    d = addDays(d, 1);
+  }
+  return count;
+}
+
+// Which working day number is d for this job (1-based), or null if not active
+function workingDayNumber(job, d) {
+  const mp = parseDate(job.montaza_pocetak);
+  const mk = parseDate(job.montaza_kraj);
+  if (!mp || !isJobActiveOnDate(job, d)) return null;
+  let count = 0;
+  let cur = new Date(mp);
+  while (cur <= d) {
+    if (isWorkingDay(cur, job)) count++;
+    cur = addDays(cur, 1);
+  }
+  return count;
+}
+
 // Returns true if job is "active" on date d (considering working days skip)
 function isJobActiveOnDate(job, d) {
   const mp = parseDate(job.montaza_pocetak);
@@ -1375,11 +1403,16 @@ function isJobActiveOnDate(job, d) {
   // Izmjera check
   const isIzm = izm && isSameDay(izm, d);
 
-  // Montaža check - must be between start and end AND be a working day for this job
+  // Montaža check
   let inMont = false;
   if (mp) {
     if (mk) {
-      inMont = d >= mp && d <= mk && isWorkingDay(d, job);
+      // Count how many working days are between mp and mk (inclusive)
+      const totalWorkingDays = countWorkingDays(job);
+      // Find the actual last working day (= start + totalWorkingDays working days)
+      const actualEnd = calcEndDate(mp, totalWorkingDays, job);
+      // Active if d is between mp and actualEnd AND is a working day for this job
+      inMont = d >= mp && d <= actualEnd && isWorkingDay(d, job);
     } else {
       inMont = isSameDay(d, mp);
     }
@@ -1920,10 +1953,13 @@ function renderMonth() {
       const noKraj = !j.montaza_kraj && mp;
 
       let bg, border, typeIcon, timeStr;
+      const isFirstDay = mp && isSameDay(selDate, mp);
       if (inMont && j.montaza_gotova) {
-        bg='rgba(58,184,122,0.2)'; border='rgba(58,184,122,0.5)'; typeIcon='🔧'; timeStr=j.montaza_pocetak_vrijeme||'';
+        bg='rgba(58,184,122,0.2)'; border='rgba(58,184,122,0.5)'; typeIcon='🔧';
+        timeStr = isFirstDay && j.montaza_pocetak_vrijeme ? j.montaza_pocetak_vrijeme : '';
       } else if (inMont) {
-        bg='rgba(232,80,58,0.18)'; border='rgba(232,80,58,0.5)'; typeIcon='🔧'; timeStr=j.montaza_pocetak_vrijeme||'';
+        bg='rgba(232,80,58,0.18)'; border='rgba(232,80,58,0.5)'; typeIcon='🔧';
+        timeStr = isFirstDay && j.montaza_pocetak_vrijeme ? j.montaza_pocetak_vrijeme : '';
       } else {
         bg='rgba(61,126,255,0.18)'; border='rgba(61,126,255,0.5)'; typeIcon='📐'; timeStr=j.vrijeme_izmjere||'';
       }

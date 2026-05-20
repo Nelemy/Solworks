@@ -1129,10 +1129,12 @@ function renderCalendar() {
       const mk = parseDate(j.montaza_kraj);
       const noKraj = !mk;
       const startStr = mp.toLocaleDateString("hr-HR", {weekday:"short", day:"numeric", month:"numeric"});
-      const endStr = mk ? mk.toLocaleDateString("hr-HR", {weekday:"short", day:"numeric", month:"numeric"}) : '?';
+      const workDayCount = mk ? countWorkingDays(j) : null;
+      const actualEndDate = workDayCount ? calcEndDate(mp, workDayCount, j) : null;
+      const endStr = actualEndDate ? actualEndDate.toLocaleDateString("hr-HR", {weekday:"short", day:"numeric", month:"numeric"}) : '?';
       const time = j.montaza_pocetak_vrijeme ? ' u ' + j.montaza_pocetak_vrijeme : '';
-      const totalDays = mk ? (daysBetween(mp, mk) + 1) : null;
-      const daysLabel = totalDays ? totalDays + (totalDays === 1 ? ' dan' : ' dana') : 'nepoznato trajanje';
+      const totalWorkDays = mk ? countWorkingDays(j) : null;
+      const daysLabel = totalWorkDays ? totalWorkDays + (totalWorkDays === 1 ? ' radni dan' : totalWorkDays < 5 ? ' radna dana' : ' radnih dana') : 'nepoznato trajanje';
       html += '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;padding:8px 10px;background:rgba(232,80,58,0.08);border:1px ' + (noKraj ? 'dashed' : 'solid') + ' rgba(232,80,58,0.25);border-radius:8px;cursor:pointer" onclick="openDetail(' + j.id + ')">'
         + '<div>'
         + '<div style="font-size:13px;font-weight:700;color:var(--text)">' + j.kupac + '</div>'
@@ -1467,8 +1469,8 @@ function renderActive() {
 
   document.getElementById('active-jobs-list').innerHTML = active.map(job => {
     const overlap = detectOverlap(job, jobs);
-    const traj = (job.montaza_pocetak&&job.montaza_kraj)
-      ? daysBetween(parseDate(job.montaza_pocetak),parseDate(job.montaza_kraj))+1+' dan/a' : '—';
+    const _wdays = (job.montaza_pocetak&&job.montaza_kraj) ? countWorkingDays(job) : null;
+    const traj = _wdays ? _wdays + (_wdays===1?' radni dan':_wdays<5?' radna dana':' radnih dana') : '—';
     const overlapCls = overlap ? ' overlap' : '';
     const overlapBanner = overlap ? '<div class="overlap-banner">⚠️ Overlap s: ' + overlap + '</div>' : '';
     const izmVal = job.izmjera_gotova ? '✓ Gotova' : fmtDate(job.datum_izmjere);
@@ -1563,7 +1565,8 @@ function openDetail(id) {
   const montPocTime = job.montaza_pocetak_vrijeme ? ' u ' + job.montaza_pocetak_vrijeme : '';
   document.getElementById('dm-mont-poc').textContent = fmtDate(job.montaza_pocetak) + montPocTime;
   document.getElementById('dm-mont-kraj').textContent = fmtDate(job.montaza_kraj);
-  const traj=(job.montaza_pocetak&&job.montaza_kraj)?daysBetween(parseDate(job.montaza_pocetak),parseDate(job.montaza_kraj))+1+' dan/a':'—';
+  const _dmWdays=(job.montaza_pocetak&&job.montaza_kraj)?countWorkingDays(job):null;
+  const traj=_dmWdays?_dmWdays+(_dmWdays===1?' radni dan':_dmWdays<5?' radna dana':' radnih dana'):'—';
   document.getElementById('dm-trajanje').textContent = traj;
   document.getElementById('tog-izmjera').classList.toggle('on', !!job.izmjera_gotova);
   document.getElementById('tog-materijal').classList.toggle('on', !!job.materijal_narucen);

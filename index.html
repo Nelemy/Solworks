@@ -799,14 +799,22 @@ select.form-input { cursor: pointer; }
       <div class="modal-section-title">Kupac</div>
       <div class="form-group">
         <label class="form-label">Tip posla *</label>
-        <div style="display:flex;gap:8px">
-          <label style="flex:1;display:flex;align-items:center;gap:8px;padding:10px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);cursor:pointer;transition:all 0.15s" id="tip-izmjera-label">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <label style="display:flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid var(--border);border-radius:var(--radius-sm);cursor:pointer">
             <input type="radio" name="tip_posla" id="tip-izmjera" value="izmjera" checked style="accent-color:var(--accent2)" onchange="updateTipForm()">
-            <span style="font-size:13px">📐 Izmjera</span>
+            <span style="font-size:12px">📐 Izmjera</span>
           </label>
-          <label style="flex:1;display:flex;align-items:center;gap:8px;padding:10px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);cursor:pointer;transition:all 0.15s" id="tip-montaza-label">
+          <label style="display:flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid var(--border);border-radius:var(--radius-sm);cursor:pointer">
             <input type="radio" name="tip_posla" id="tip-montaza" value="montaza" onchange="updateTipForm()">
-            <span style="font-size:13px">🔧 Montaža</span>
+            <span style="font-size:12px">🔧 Montaža</span>
+          </label>
+          <label style="display:flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid var(--border);border-radius:var(--radius-sm);cursor:pointer">
+            <input type="radio" name="tip_posla" id="tip-nabava" value="nabava" onchange="updateTipForm()">
+            <span style="font-size:12px">🚐 Nabava mat.</span>
+          </label>
+          <label style="display:flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid var(--border);border-radius:var(--radius-sm);cursor:pointer">
+            <input type="radio" name="tip_posla" id="tip-garaza" value="garaza" onchange="updateTipForm()">
+            <span style="font-size:12px">🚪 Garažna vrata</span>
           </label>
         </div>
       </div>

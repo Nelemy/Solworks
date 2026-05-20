@@ -1054,7 +1054,9 @@ function renderCalendar() {
         const mp = parseDate(j.montaza_pocetak);
         const mk = parseDate(j.montaza_kraj);
         const izm = parseDate(j.datum_izmjere);
-        const inMont = mp && (mk ? d >= mp && d <= mk && isWorkingDay(d, j) : isSameDay(d, mp));
+        // Use getActualEnd so days after mk but within working-day range show as montaža
+        const actualEnd = mp && mk ? getActualEnd(j) : null;
+        const inMont = mp && (mk ? (d >= mp && d <= actualEnd && isWorkingDay(d, j)) : isSameDay(d, mp));
         const isIzmjera = izm && isSameDay(izm, d) && !inMont;
 
         let pillClass = inMont
@@ -1064,12 +1066,19 @@ function renderCalendar() {
         let sub = '';
         if (inMont && !j.montaza_gotova) {
           const isFirstDay = isSameDay(d, mp);
+          const totalDays = getIntendedDays(j);
+          // Which working day number is today?
+          let dayNum = 0;
+          let cur = new Date(mp);
+          while (cur <= d) {
+            if (isWorkingDay(cur, j)) dayNum++;
+            cur = addDays(cur, 1);
+          }
           if (isFirstDay) {
-            // First day: show start time
-            sub = j.montaza_pocetak_vrijeme || '';
+            const timeStr = j.montaza_pocetak_vrijeme ? j.montaza_pocetak_vrijeme + ' · ' : '';
+            sub = timeStr + dayNum + '/' + totalDays;
           } else {
-            // Other days: nothing - they work all day, no info needed
-            sub = '';
+            sub = dayNum + '/' + totalDays;
           }
         } else if (inMont && j.montaza_gotova) {
           sub = '✓';

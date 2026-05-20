@@ -1057,7 +1057,7 @@ function renderCalendar() {
         const mp = parseDate(j.montaza_pocetak);
         const mk = parseDate(j.montaza_kraj);
         const izm = parseDate(j.datum_izmjere);
-        const inMont = mp && (mk ? (d >= mp && d <= mk && isWorkingDay(d, j)) : isSameDay(d, mp));
+        const inMont = mp && (mk ? d >= mp && d <= mk && isWorkingDay(d, j) : isSameDay(d, mp));
         const isIzmjera = izm && isSameDay(izm, d) && !inMont;
 
         let pillClass = inMont

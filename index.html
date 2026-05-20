@@ -179,7 +179,7 @@ body { background: var(--bg); color: var(--text); font-family: var(--font-body);
 /* Day columns */
 .cal-day-row {
   display: grid;
-  grid-template-columns: 52px repeat(5, 1fr);
+  grid-template-columns: 52px repeat(6, 1fr);
   gap: 4px;
   margin-bottom: 4px;
 }
@@ -215,7 +215,7 @@ body { background: var(--bg); color: var(--text); font-family: var(--font-body);
 /* Job blocks in calendar */
 .cal-grid {
   display: grid;
-  grid-template-columns: 52px repeat(5, 1fr);
+  grid-template-columns: 52px repeat(6, 1fr);
   gap: 4px;
   margin-top: 4px;
 }
@@ -291,7 +291,7 @@ body { background: var(--bg); color: var(--text); font-family: var(--font-body);
   border-bottom: 1px solid var(--border);
 }
 .izmjere-row-grid {
-  display: grid; grid-template-columns: 52px repeat(5, 1fr); gap: 4px;
+  display: grid; grid-template-columns: 52px repeat(6, 1fr); gap: 4px;
   padding: 6px;
 }
 .izmjere-day-cell {
@@ -320,7 +320,7 @@ body { background: var(--bg); color: var(--text); font-family: var(--font-body);
   border-bottom: 1px solid var(--border);
 }
 .montaza-row-grid {
-  display: grid; grid-template-columns: 52px repeat(5, 1fr); gap: 4px;
+  display: grid; grid-template-columns: 52px repeat(6, 1fr); gap: 4px;
   padding: 6px;
 }
 .montaza-day-cell {
@@ -359,7 +359,7 @@ body { background: var(--bg); color: var(--text); font-family: var(--font-body);
   border-bottom: 1px solid rgba(232,80,58,0.2);
 }
 .overlap-row-grid {
-  display: grid; grid-template-columns: 52px repeat(5, 1fr); gap: 4px;
+  display: grid; grid-template-columns: 52px repeat(6, 1fr); gap: 4px;
   padding: 6px;
 }
 .overlap-day-cell {
@@ -468,8 +468,8 @@ select.form-input { cursor: pointer; }
 
 /* Week calendar */
 .cal-week { padding: 8px 6px 100px; }
-.cal-day-row, .cal-grid { grid-template-columns: 40px repeat(5, 1fr); gap: 3px; }
-.izmjere-row-grid, .overlap-row-grid, .montaza-row-grid { grid-template-columns: 40px repeat(5, 1fr); gap: 3px; }
+.cal-day-row, .cal-grid { grid-template-columns: 40px repeat(6, 1fr); gap: 3px; }
+.izmjere-row-grid, .overlap-row-grid, .montaza-row-grid { grid-template-columns: 40px repeat(6, 1fr); gap: 3px; }
 .cal-day-header { padding: 7px 3px; border-radius: 6px; }
 .cal-day-name { font-size: 11px; }
 .cal-day-num { font-size: 18px; }
@@ -539,8 +539,8 @@ select.form-input { cursor: pointer; }
   .btn-add { height: 38px; padding: 0 16px; font-size: 13px; }
   .week-nav { padding: 10px 16px; }
   .cal-week { padding: 12px 12px 100px; }
-  .cal-day-row, .cal-grid { grid-template-columns: 52px repeat(5, 1fr); gap: 4px; }
-  .izmjere-row-grid, .overlap-row-grid, .montaza-row-grid { grid-template-columns: 52px repeat(5, 1fr); gap: 4px; }
+  .cal-day-row, .cal-grid { grid-template-columns: 52px repeat(6, 1fr); gap: 4px; }
+  .izmjere-row-grid, .overlap-row-grid, .montaza-row-grid { grid-template-columns: 52px repeat(6, 1fr); gap: 4px; }
   .cal-day-num { font-size: 20px; }
   .job-pill { min-height: 62px; padding: 8px 10px; }
   .job-pill-name { font-size: 13px; }
@@ -556,8 +556,8 @@ select.form-input { cursor: pointer; }
   .week-nav { padding: 12px 24px; }
   .week-nav-label { font-size: 16px; }
   .cal-week { padding: 16px 20px 80px; }
-  .cal-day-row, .cal-grid { grid-template-columns: 64px repeat(5, 1fr); gap: 6px; }
-  .izmjere-row-grid, .overlap-row-grid, .montaza-row-grid { grid-template-columns: 64px repeat(5, 1fr); gap: 6px; }
+  .cal-day-row, .cal-grid { grid-template-columns: 64px repeat(6, 1fr); gap: 6px; }
+  .izmjere-row-grid, .overlap-row-grid, .montaza-row-grid { grid-template-columns: 64px repeat(6, 1fr); gap: 6px; }
   .cal-empty-col { min-height: 72px; }
   .job-pill { min-height: 68px; }
   .cal-day-num { font-size: 22px; }
@@ -947,18 +947,18 @@ function renderCalendar() {
 
   // Week days: Mon-Fri
   const weekDays = [];
-  for (let i = 0; i < 5; i++) weekDays.push(addDays(currentWeekMonday, i));
+  for (let i = 0; i < 6; i++) weekDays.push(addDays(currentWeekMonday, i));
 
   // Update nav
   const monthStart = MONTHS_SHORT[weekDays[0].getMonth()];
-  const monthEnd   = MONTHS_SHORT[weekDays[4].getMonth()];
-  const monthLabel = weekDays[0].getMonth() === weekDays[4].getMonth()
+  const monthEnd   = MONTHS_SHORT[weekDays[5].getMonth()];
+  const monthLabel = weekDays[0].getMonth() === weekDays[5].getMonth()
     ? MONTHS_HR[weekDays[0].getMonth()] + ' ' + weekDays[0].getFullYear()
-    : monthStart + '–' + monthEnd + ' ' + weekDays[4].getFullYear();
+    : monthStart + '–' + monthEnd + ' ' + weekDays[5].getFullYear();
   document.getElementById('week-label').textContent = monthLabel;
 
   const wStart = weekDays[0].toLocaleDateString('hr-HR',{day:'2-digit',month:'2-digit'});
-  const wEnd   = weekDays[4].toLocaleDateString('hr-HR',{day:'2-digit',month:'2-digit'});
+  const wEnd   = weekDays[5].toLocaleDateString('hr-HR',{day:'2-digit',month:'2-digit'});
   document.getElementById('week-sub').textContent = wStart + ' – ' + wEnd;
 
   const isCurrentWeek = isSameDay(currentWeekMonday, getMondayOf(new Date()));
@@ -1189,7 +1189,7 @@ function renderMobileCalendar() {
   const jobs = getJobs().filter(j => !j.arhiva);
   const today = new Date(); today.setHours(0,0,0,0);
   const weekDays = [];
-  for (let i = 0; i < 5; i++) weekDays.push(addDays(currentWeekMonday, i));
+  for (let i = 0; i < 6; i++) weekDays.push(addDays(currentWeekMonday, i));
 
   // Default selected day = today if in week, else monday
   if (!mobileSelectedDay || !weekDays.find(d => toDateStr(d) === mobileSelectedDay)) {

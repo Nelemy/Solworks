@@ -1190,9 +1190,9 @@ function renderCalendar() {
     return montOnDay.length > 1;
   });
 
-  html += `<div class="overlap-row-wrap ${hasAnyOverlap?'visible':''}">
-    <div class="overlap-row-head">⚠️ Preklapanje montaža</div>
-    <div class="overlap-row-grid"><div></div>`;
+  html += '<div class="overlap-row-wrap ' + (hasAnyOverlap?'visible':'') + '">';
+  html += '<div class="overlap-row-head">⚠️ Preklapanje montaža</div>';
+  html += '<div class="overlap-row-grid"><div></div>';
   weekDays.forEach(d => {
     const montOnDay = jobs.filter(j => {
       const mp = parseDate(j.montaza_pocetak);
@@ -1201,7 +1201,7 @@ function renderCalendar() {
     });
     if (montOnDay.length > 1) {
       const names = montOnDay.map(j => j.kupac.split(' ').slice(-1)[0]).join(' + ');
-      html += `<div class="overlap-day-cell has-overlap" title="${names}">⚠️</div>`;
+      html += '<div class="overlap-day-cell has-overlap" title="' + names + '">⚠️</div>';
     } else {
       html += '<div class="overlap-day-cell"></div>';
     }
@@ -1433,38 +1433,49 @@ function renderActive() {
   document.getElementById('cnt-izmjere').textContent = active.filter(j=>{
     const d=parseDate(j.datum_izmjere); return d&&!j.izmjera_gotova&&d>=td;
   }).length;
-  document.getElementById('active-count-label').textContent = `${active.length} poslova`;
+  document.getElementById('active-count-label').textContent = active.length + ' poslova';
 
   document.getElementById('active-jobs-list').innerHTML = active.map(job => {
     const overlap = detectOverlap(job, jobs);
     const traj = (job.montaza_pocetak&&job.montaza_kraj)
       ? daysBetween(parseDate(job.montaza_pocetak),parseDate(job.montaza_kraj))+1+' dan/a' : '—';
-    return `<div class="job-card ${overlap?'overlap':''}" onclick="openDetail(${job.id})">
-      <div class="job-card-top">
-        <div><div class="job-name">${job.kupac}</div><div class="job-addr">📍 ${job.adresa}</div></div>
-        <div class="job-badges">${getPayBadge(job.status_placanja)}${getStatusBadge(job)}</div>
-      </div>
-      <div class="job-card-meta">
-        <div class="meta-cell"><div class="meta-label">Izmjera</div><div class="meta-value ${job.izmjera_gotova?'ok':'no'}">${job.izmjera_gotova?'✓ Gotova':fmtDate(job.datum_izmjere)}</div></div>
-        <div class="meta-cell"><div class="meta-label">Materijal</div><div class="meta-value ${job.materijal_narucen?'ok':'no'}">${job.materijal_narucen?'✓ Naručen':'✗ Nije'}</div></div>
-        <div class="meta-cell"><div class="meta-label">Montaža</div><div class="meta-value">${job.montaza_pocetak?fmtDate(job.montaza_pocetak):'—'}</div></div>
-        <div class="meta-cell"><div class="meta-label">Trajanje</div><div class="meta-value">${traj}</div></div>
-      </div>
-      ${overlap?`<div class="overlap-banner">⚠️ Overlap s: ${overlap}</div>`:''}
-    </div>`;
+    const overlapCls = overlap ? ' overlap' : '';
+    const overlapBanner = overlap ? '<div class="overlap-banner">⚠️ Overlap s: ' + overlap + '</div>' : '';
+    const izmVal = job.izmjera_gotova ? '✓ Gotova' : fmtDate(job.datum_izmjere);
+    const izmCls = job.izmjera_gotova ? 'ok' : 'no';
+    const matVal = job.materijal_narucen ? '✓ Naručen' : '✗ Nije';
+    const matCls = job.materijal_narucen ? 'ok' : 'no';
+    const montVal = job.montaza_pocetak ? fmtDate(job.montaza_pocetak) : '—';
+    return '<div class="job-card' + overlapCls + '" onclick="openDetail(' + job.id + ')">'
+      + '<div class="job-card-top">'
+      + '<div><div class="job-name">' + job.kupac + '</div><div class="job-addr">📍 ' + job.adresa + '</div></div>'
+      + '<div class="job-badges">' + getPayBadge(job.status_placanja) + getStatusBadge(job) + '</div>'
+      + '</div>'
+      + '<div class="job-card-meta">'
+      + '<div class="meta-cell"><div class="meta-label">Izmjera</div><div class="meta-value ' + izmCls + '">' + izmVal + '</div></div>'
+      + '<div class="meta-cell"><div class="meta-label">Materijal</div><div class="meta-value ' + matCls + '">' + matVal + '</div></div>'
+      + '<div class="meta-cell"><div class="meta-label">Montaža</div><div class="meta-value">' + montVal + '</div></div>'
+      + '<div class="meta-cell"><div class="meta-label">Trajanje</div><div class="meta-value">' + traj + '</div></div>'
+      + '</div>'
+      + overlapBanner
+      + '</div>';
   }).join('');
 }
+
 
 // ── RENDER ARCHIVE ─────────────────────────────────────────────────────────
 function renderArchive() {
   const jobs = getJobs().filter(j=>j.arhiva).sort((a,b)=>(parseDate(b.montaza_kraj)||0)-(parseDate(a.montaza_kraj)||0));
-  document.getElementById('archive-count-label').textContent = `${jobs.length} poslova`;
-  document.getElementById('archive-list').innerHTML = jobs.map(j=>`
-    <div class="archive-card" onclick="openDetail(${j.id})">
-      <div><div class="archive-name">${j.kupac}</div><div class="archive-date">📍 ${j.adresa} · ${fmtDate(j.montaza_kraj)}</div></div>
-      <div class="archive-iznos">${j.iznos?j.iznos.toLocaleString('hr-HR')+' €':'—'}</div>
-    </div>`).join('');
+  document.getElementById('archive-count-label').textContent = jobs.length + ' poslova';
+  document.getElementById('archive-list').innerHTML = jobs.map(j => {
+    const iznos = j.iznos ? j.iznos.toLocaleString('hr-HR') + ' €' : '—';
+    return '<div class="archive-card" onclick="openDetail(' + j.id + ')">'
+      + '<div><div class="archive-name">' + j.kupac + '</div><div class="archive-date">📍 ' + j.adresa + ' · ' + fmtDate(j.montaza_kraj) + '</div></div>'
+      + '<div class="archive-iznos">' + iznos + '</div>'
+      + '</div>';
+  }).join('');
 }
+
 
 // ── HELPERS ────────────────────────────────────────────────────────────────
 function getPayBadge(s) {

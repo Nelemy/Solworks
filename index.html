@@ -1029,9 +1029,6 @@ function renderCalendar() {
 
     // Find jobs active on this day
     const dayJobs = jobs.filter(j => isJobActiveOnDate(j, d));
-      const isIzm = izm && isSameDay(izm, d);
-      return inMont || isIzm;
-    });
 
     // Sort by time within the day
     dayJobs.sort((a, b) => {
@@ -1111,7 +1108,7 @@ function renderCalendar() {
     }
 
     html += '</div>';
-  };
+  });
   html += '</div>'; // cal-grid
 
   // ── MONTAŽA SUMMARY ROW ──

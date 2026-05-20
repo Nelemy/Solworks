@@ -251,14 +251,18 @@ body { background: var(--bg); color: var(--text); font-family: var(--font-body);
   user-select: none;
 }
 .job-pill:active { opacity: 0.8; }
-.job-pill-montaza { background: rgba(232,80,58,0.18); border: 1px solid rgba(232,80,58,0.4); }
-.job-pill-izmjera { background: rgba(61,126,255,0.18); border: 1px solid rgba(61,126,255,0.4); }
+.job-pill-montaza  { background: rgba(232,80,58,0.18);  border: 1px solid rgba(232,80,58,0.4); }
+.job-pill-izmjera  { background: rgba(61,126,255,0.18); border: 1px solid rgba(61,126,255,0.4); }
+.job-pill-nabava   { background: rgba(232,160,39,0.18); border: 1px solid rgba(232,160,39,0.4); }
+.job-pill-garaza   { background: rgba(138,92,246,0.18); border: 1px solid rgba(138,92,246,0.4); }
 .job-pill-gotovo  { background: rgba(58,184,122,0.12); border: 1px solid rgba(58,184,122,0.3); opacity: 0.7; }
 .job-pill-name { font-weight: 700; color: var(--text); font-size: 13px; line-height: 1.2; }
 .job-pill-sub { font-size: 11px; color: var(--muted); margin-top: 1px; }
 .job-pill-addr { font-size: 10px; color: var(--muted); opacity: 0.8; margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .job-pill-montaza .job-pill-sub { color: var(--red); }
 .job-pill-izmjera .job-pill-sub { color: var(--accent2); }
+.job-pill-nabava  .job-pill-sub { color: var(--accent); }
+.job-pill-garaza  .job-pill-sub { color: #8a5cf6; }
 .job-pill-gotovo .job-pill-sub  { color: var(--green); }
 .overlap-dot {
   position: absolute; top: 4px; right: 4px;
@@ -704,13 +708,21 @@ select.form-input { cursor: pointer; }
     <div class="modal-section">
       <div class="modal-section-title">Tip posla</div>
       <div style="display:flex;gap:8px">
-        <label style="flex:1;display:flex;align-items:center;gap:8px;padding:10px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);cursor:pointer" id="edit-tip-izmjera-label">
+        <label style="flex:1;display:flex;align-items:center;gap:8px;padding:8px 8px;border:1px solid var(--border);border-radius:var(--radius-sm);cursor:pointer">
           <input type="radio" name="edit_tip_posla" id="edit-tip-izmjera" value="izmjera" style="accent-color:var(--accent2)" onchange="updateEditTipForm()">
-          <span style="font-size:13px">📐 Izmjera</span>
+          <span style="font-size:12px">📐 Izmjera</span>
         </label>
-        <label style="flex:1;display:flex;align-items:center;gap:8px;padding:10px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);cursor:pointer" id="edit-tip-montaza-label">
+        <label style="flex:1;display:flex;align-items:center;gap:8px;padding:8px 8px;border:1px solid var(--border);border-radius:var(--radius-sm);cursor:pointer">
           <input type="radio" name="edit_tip_posla" id="edit-tip-montaza" value="montaza" onchange="updateEditTipForm()">
-          <span style="font-size:13px">🔧 Montaža</span>
+          <span style="font-size:12px">🔧 Montaža</span>
+        </label>
+        <label style="flex:1;display:flex;align-items:center;gap:8px;padding:8px 8px;border:1px solid var(--border);border-radius:var(--radius-sm);cursor:pointer">
+          <input type="radio" name="edit_tip_posla" id="edit-tip-nabava" value="nabava" onchange="updateEditTipForm()">
+          <span style="font-size:12px">🚐 Nabava</span>
+        </label>
+        <label style="flex:1;display:flex;align-items:center;gap:8px;padding:8px 8px;border:1px solid var(--border);border-radius:var(--radius-sm);cursor:pointer">
+          <input type="radio" name="edit_tip_posla" id="edit-tip-garaza" value="garaza" onchange="updateEditTipForm()">
+          <span style="font-size:12px">🚪 Garažna</span>
         </label>
       </div>
     </div>
@@ -736,9 +748,17 @@ select.form-input { cursor: pointer; }
     </div>
     <div class="modal-section">
       <div class="modal-section-title">Termini</div>
+      <div id="e-izmjera-termini">
       <div class="form-row">
         <div class="form-group"><label class="form-label">Datum izmjere</label><input class="form-input" id="e-izm" type="date"></div>
         <div class="form-group"><label class="form-label">Vrijeme izmjere</label><input class="form-input" id="e-izm-time" type="time"></div>
+      </div>
+      </div>
+      <div id="e-nabava-termini" style="display:none">
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Datum nabave *</label><input class="form-input" id="e-nabava-dat" type="date"></div>
+        <div class="form-group"><label class="form-label">Polazak u</label><input class="form-input" id="e-nabava-time" type="time" placeholder="06:00"></div>
+      </div>
       </div>
       <div style="height:1px;background:var(--border);margin:6px 0 10px;opacity:0.5"></div>
       <div class="form-row">
@@ -821,7 +841,7 @@ select.form-input { cursor: pointer; }
       </div>
       <div class="form-group"><label class="form-label">Montaža kraj (procjena)</label><input class="form-input" id="f-mont-kraj" type="date"></div>
       <div class="form-group"><label class="form-label">Napomena</label><input class="form-input" id="f-napomena" placeholder="Bilješka za ekipu..." type="text"></div>
-      <div style="display:flex;gap:10px;margin-top:4px">
+      <div class="weekend-row" style="display:flex;gap:10px;margin-top:4px">
         <label style="display:flex;align-items:center;gap:8px;cursor:pointer;padding:8px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);flex:1">
           <input type="checkbox" id="f-radi-sub" style="accent-color:var(--accent);width:16px;height:16px">
           <span style="font-size:13px">Radna subota</span>
@@ -1058,10 +1078,13 @@ function renderCalendar() {
         const actualEnd = mp && mk ? getActualEnd(j) : null;
         const inMont = mp && (mk ? (d >= mp && d <= actualEnd && isWorkingDay(d, j)) : isSameDay(d, mp));
         const isIzmjera = izm && isSameDay(izm, d) && !inMont;
+        const tip = j.tip_posla || 'izmjera';
 
-        let pillClass = inMont
-          ? (j.montaza_gotova ? 'job-pill-gotovo' : 'job-pill-montaza')
-          : 'job-pill-izmjera';
+        let pillClass;
+        if (tip === 'nabava') pillClass = 'job-pill-nabava';
+        else if (tip === 'garaza') pillClass = j.montaza_gotova ? 'job-pill-gotovo' : 'job-pill-garaza';
+        else if (inMont) pillClass = j.montaza_gotova ? 'job-pill-gotovo' : 'job-pill-montaza';
+        else pillClass = 'job-pill-izmjera';
 
         let sub = '';
         if (inMont && !j.montaza_gotova) {
@@ -1082,9 +1105,12 @@ function renderCalendar() {
           }
         } else if (inMont && j.montaza_gotova) {
           sub = '✓';
+        } else if (tip === 'nabava') {
+          const dn = parseDate(j.datum_nabave);
+          sub = dn && isSameDay(d, dn) ? (j.vrijeme_nabave || '') : '';
         } else {
           const tIzm = j.vrijeme_izmjere ? j.vrijeme_izmjere : '';
-          sub = '📐' + (tIzm ? ' ' + tIzm : '');
+          sub = tIzm || '';
         }
 
         // Check overlap
@@ -1096,7 +1122,7 @@ function renderCalendar() {
         });
 
         const noKraj = !j.montaza_kraj && parseDate(j.montaza_pocetak);
-        const tipIcon = j.tip_posla === 'montaza' ? '🔧' : '📐';
+        const tipIcon = tip === 'nabava' ? '🚐' : tip === 'garaza' ? '🚪' : tip === 'montaza' ? '🔧' : '📐';
         const pillStyle = noKraj ? 'border-style:dashed;' : '';
         const overlapDot = hasOverlap ? '<div class="overlap-dot"></div>' : '';
         const krajLabel = noKraj ? '<div style="position:absolute;top:4px;right:6px;font-size:9px;color:var(--accent);font-weight:700">kraj?</div>' : '';
@@ -1430,6 +1456,14 @@ function getActualEnd(job) {
 
 // Returns true if job is "active" on date d (considering working days skip)
 function isJobActiveOnDate(job, d) {
+  const tip = job.tip_posla || 'izmjera';
+
+  // Nabava: only on datum_nabave
+  if (tip === 'nabava') {
+    const dn = parseDate(job.datum_nabave);
+    return dn && isSameDay(dn, d);
+  }
+
   const mp = parseDate(job.montaza_pocetak);
   const mk = parseDate(job.montaza_kraj);
   const izm = parseDate(job.datum_izmjere);
@@ -1437,7 +1471,7 @@ function isJobActiveOnDate(job, d) {
   // Izmjera check
   const isIzm = izm && isSameDay(izm, d);
 
-  // Montaža check - use actual working-day end, not raw montaza_kraj
+  // Montaža / Garažna vrata check - use actual working-day end
   let inMont = false;
   if (mp) {
     if (mk) {
@@ -1659,7 +1693,13 @@ function pretvoriUMontazu() {
 }
 
 function updateEditTipForm() {
-  // Both sections always visible - no hiding needed
+  const tip = document.querySelector('input[name="edit_tip_posla"]:checked')?.value || 'izmjera';
+  const izmF = document.getElementById('e-izmjera-termini');
+  const nabF = document.getElementById('e-nabava-termini');
+  const montF = document.getElementById('e-montaza-termini');
+  if (izmF) izmF.style.display = tip === 'nabava' ? 'none' : '';
+  if (nabF) nabF.style.display = tip === 'nabava' ? '' : 'none';
+  if (montF) montF.style.display = tip === 'nabava' ? 'none' : '';
 }
 
 function openEditModal() {
@@ -1688,6 +1728,9 @@ function openEditModal() {
   document.getElementById('e-napomena').value = job.napomena || '';
   document.getElementById('e-radi-sub').checked = !!job.radi_subotu;
   document.getElementById('e-radi-ned').checked = !!job.radi_nedjelju;
+  const eNabavaDat = document.getElementById('e-nabava-dat'); if(eNabavaDat) eNabavaDat.value = job.datum_nabave||'';
+  const eNabavaTime = document.getElementById('e-nabava-time'); if(eNabavaTime) eNabavaTime.value = job.vrijeme_nabave||'';
+  updateEditTipForm();
 
   document.getElementById('edit-modal').classList.add('open');
 }
@@ -1724,6 +1767,8 @@ async function saveEdit() {
       montaza_pocetak_vrijeme: document.getElementById('e-mont-poc-time').value || null,
       montaza_kraj: document.getElementById('e-mont-kraj').value || null,
       napomena: document.getElementById('e-napomena').value.trim() || null,
+      datum_nabave: document.getElementById('e-nabava-dat')?.value||null,
+      vrijeme_nabave: document.getElementById('e-nabava-time')?.value||null,
       radi_subotu: document.getElementById('e-radi-sub').checked,
       radi_nedjelju: document.getElementById('e-radi-ned').checked,
     };
@@ -1807,6 +1852,9 @@ function applyPrefillDate() {
   document.getElementById('f-mont-poc-time').value = '';
   if (tip === 'izmjera') {
     document.getElementById('f-izm').value = prefillDate;
+  } else if (tip === 'nabava') {
+    const fnd = document.getElementById('f-nabava-dat');
+    if (fnd) fnd.value = prefillDate;
   } else {
     document.getElementById('f-mont-poc').value = prefillDate;
     document.getElementById('f-mont-poc-time').value = '07:00';
@@ -1814,6 +1862,17 @@ function applyPrefillDate() {
 }
 
 function updateTipForm() {
+  const tip = document.querySelector('input[name="tip_posla"]:checked')?.value || 'izmjera';
+  const izmjeraFields = document.getElementById('f-izmjera-termini');
+  const nabavaFields = document.getElementById('f-nabava-termini');
+  const montazaFields = document.getElementById('f-montaza-termini');
+  const weekendRow = document.querySelector('#add-modal .weekend-row');
+
+  if (izmjeraFields) izmjeraFields.style.display = (tip === 'nabava') ? 'none' : '';
+  if (nabavaFields) nabavaFields.style.display = (tip === 'nabava') ? '' : 'none';
+  if (montazaFields) montazaFields.style.display = (tip === 'nabava') ? 'none' : '';
+  if (weekendRow) weekendRow.style.display = (tip === 'izmjera' || tip === 'nabava') ? 'none' : '';
+
   // Re-apply prefill date to correct field when tip changes
   if (prefillDate && document.getElementById('add-modal').classList.contains('open')) {
     applyPrefillDate();
@@ -1824,6 +1883,8 @@ function closeAddModal() {
     document.getElementById('add-modal').classList.remove('open');
     document.getElementById('f-radi-sub').checked = false;
     document.getElementById('f-radi-ned').checked = false;
+    const fNabavaDat = document.getElementById('f-nabava-dat'); if(fNabavaDat) fNabavaDat.value='';
+    const fNabavaTime = document.getElementById('f-nabava-time'); if(fNabavaTime) fNabavaTime.value='';
     ['f-kupac','f-adresa','f-tel','f-iznos','f-avans','f-izm','f-izm-time','f-mont-poc','f-mont-poc-time','f-mont-kraj','f-napomena'].forEach(id=>{
       document.getElementById(id).value='';
     });
@@ -1857,6 +1918,8 @@ async function addJob() {
       montaza_kraj: document.getElementById('f-mont-kraj').value||null,
       izmjera_gotova:false, materijal_narucen:false, montaza_gotova:false,
       napomena: document.getElementById('f-napomena').value.trim()||null,
+      datum_nabave: document.getElementById('f-nabava-dat').value||null,
+      vrijeme_nabave: document.getElementById('f-nabava-time').value||null,
       radi_subotu: document.getElementById('f-radi-sub').checked,
       radi_nedjelju: document.getElementById('f-radi-ned').checked,
       arhiva:false,
@@ -1983,9 +2046,19 @@ function renderMonth() {
       const inMont = mp && (mk ? (d >= mp && d <= mk) : isSameDay(d, mp));
       const noKraj = !j.montaza_kraj && mp;
 
+      const tipM = j.tip_posla || 'izmjera';
       let bg, border, typeIcon, timeStr;
       const isFirstDay = mp && isSameDay(d, mp);
-      if (inMont && j.montaza_gotova) {
+      if (tipM === 'nabava') {
+        bg='rgba(232,160,39,0.18)'; border='rgba(232,160,39,0.5)'; typeIcon='🚐';
+        timeStr = j.vrijeme_nabave || '';
+      } else if (tipM === 'garaza' && j.montaza_gotova) {
+        bg='rgba(58,184,122,0.2)'; border='rgba(58,184,122,0.5)'; typeIcon='🚪';
+        timeStr = isFirstDay && j.montaza_pocetak_vrijeme ? j.montaza_pocetak_vrijeme : '';
+      } else if (tipM === 'garaza') {
+        bg='rgba(138,92,246,0.18)'; border='rgba(138,92,246,0.5)'; typeIcon='🚪';
+        timeStr = isFirstDay && j.montaza_pocetak_vrijeme ? j.montaza_pocetak_vrijeme : '';
+      } else if (inMont && j.montaza_gotova) {
         bg='rgba(58,184,122,0.2)'; border='rgba(58,184,122,0.5)'; typeIcon='🔧';
         timeStr = isFirstDay && j.montaza_pocetak_vrijeme ? j.montaza_pocetak_vrijeme : '';
       } else if (inMont) {

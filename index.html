@@ -760,14 +760,15 @@ select.form-input { cursor: pointer; }
         <div class="form-group"><label class="form-label">Polazak u</label><input class="form-input" id="e-nabava-time" type="time" placeholder="06:00"></div>
       </div>
       </div>
-      <div style="height:1px;background:var(--border);margin:6px 0 10px;opacity:0.5"></div>
+<div id="e-montaza-termini"><div style="height:1px;background:var(--border);margin:6px 0 10px;opacity:0.5"></div>
       <div class="form-row">
-        <div class="form-group"><label class="form-label">Montaža početak</label><input class="form-input" id="e-mont-poc" type="date"></div>
+        <div class="form-group"><label class="form-label">Montaža / GV početak</label><input class="form-input" id="e-mont-poc" type="date"></div>
         <div class="form-group"><label class="form-label">Početak u</label><input class="form-input" id="e-mont-poc-time" type="time"></div>
       </div>
-      <div class="form-group"><label class="form-label">Montaža kraj (procjena)</label><input class="form-input" id="e-mont-kraj" type="date"></div>
+      <div class="form-group"><label class="form-label">Montaža / GV kraj (procjena)</label><input class="form-input" id="e-mont-kraj" type="date"></div>
+      </div><!-- /e-montaza-termini -->
       <div class="form-group"><label class="form-label">Napomena</label><input class="form-input" id="e-napomena" type="text"></div>
-      <div style="display:flex;gap:10px;margin-top:4px">
+      <div class="weekend-row" style="display:flex;gap:10px;margin-top:4px">
         <label style="display:flex;align-items:center;gap:8px;cursor:pointer;padding:8px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);flex:1">
           <input type="checkbox" id="e-radi-sub" style="accent-color:var(--accent);width:16px;height:16px">
           <span style="font-size:13px">Radna subota</span>
@@ -1716,12 +1717,19 @@ function pretvoriUMontazu() {
 
 function updateEditTipForm() {
   const tip = document.querySelector('input[name="edit_tip_posla"]:checked')?.value || 'izmjera';
-  const izmF = document.getElementById('e-izmjera-termini');
-  const nabF = document.getElementById('e-nabava-termini');
+  const izmF  = document.getElementById('e-izmjera-termini');
+  const nabF  = document.getElementById('e-nabava-termini');
   const montF = document.getElementById('e-montaza-termini');
-  if (izmF) izmF.style.display = tip === 'nabava' ? 'none' : '';
-  if (nabF) nabF.style.display = tip === 'nabava' ? '' : 'none';
-  if (montF) montF.style.display = tip === 'nabava' ? 'none' : '';
+  const wRow  = document.querySelector('#edit-modal .weekend-row');
+
+  const showNabava  = tip === 'nabava';
+  const showIzmjera = tip === 'izmjera';
+  const showMontaza = tip === 'montaza' || tip === 'garaza';
+
+  if (nabF)  nabF.style.display  = showNabava  ? '' : 'none';
+  if (izmF)  izmF.style.display  = showIzmjera ? '' : 'none';
+  if (montF) montF.style.display = showMontaza ? '' : 'none';
+  if (wRow)  wRow.style.display  = showMontaza ? '' : 'none';
 }
 
 function openEditModal() {
@@ -1886,16 +1894,19 @@ function applyPrefillDate() {
 function updateTipForm() {
   const tip = document.querySelector('input[name="tip_posla"]:checked')?.value || 'izmjera';
   const izmjeraFields = document.getElementById('f-izmjera-termini');
-  const nabavaFields = document.getElementById('f-nabava-termini');
+  const nabavaFields  = document.getElementById('f-nabava-termini');
   const montazaFields = document.getElementById('f-montaza-termini');
-  const weekendRow = document.querySelector('#add-modal .weekend-row');
+  const weekendRow    = document.querySelector('#add-modal .weekend-row');
 
-  if (izmjeraFields) izmjeraFields.style.display = (tip === 'nabava') ? 'none' : '';
-  if (nabavaFields) nabavaFields.style.display = (tip === 'nabava') ? '' : 'none';
-  if (montazaFields) montazaFields.style.display = (tip === 'nabava') ? 'none' : '';
-  if (weekendRow) weekendRow.style.display = (tip === 'izmjera' || tip === 'nabava') ? 'none' : '';
+  const showNabava  = tip === 'nabava';
+  const showIzmjera = tip === 'izmjera';
+  const showMontaza = tip === 'montaza' || tip === 'garaza';
 
-  // Re-apply prefill date to correct field when tip changes
+  if (nabavaFields)  nabavaFields.style.display  = showNabava  ? '' : 'none';
+  if (izmjeraFields) izmjeraFields.style.display = showIzmjera ? '' : 'none';
+  if (montazaFields) montazaFields.style.display = showMontaza ? '' : 'none';
+  if (weekendRow)    weekendRow.style.display    = showMontaza ? '' : 'none';
+
   if (prefillDate && document.getElementById('add-modal').classList.contains('open')) {
     applyPrefillDate();
   }

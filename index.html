@@ -1010,10 +1010,12 @@ function renderCalendar() {
   weekDays.forEach(d => {
     const isToday = isSameDay(d, today);
     const isPast = d < today && !isToday;
-    html += `<div class="cal-day-header ${isToday?'today':''} ${isPast?'past':''}" onclick="handleDayClick('${toDateStr(d)}')">
-      <div class="cal-day-name">${DAYS_HR[d.getDay()]}</div>
-      <div class="cal-day-num">${d.getDate()}</div>
-    </div>`;
+    const hdrClass = 'cal-day-header' + (isToday?' today':'') + (isPast?' past':'');
+    const hdrDs = toDateStr(d);
+    html += '<div class="' + hdrClass + '" data-date="' + hdrDs + '" onclick="handleDayClick(this.dataset.date)">'
+          + '<div class="cal-day-name">' + DAYS_HR[d.getDay()] + '</div>'
+          + '<div class="cal-day-num">' + d.getDate() + '</div>'
+          + '</div>';
   });
   html += '</div>';
 
@@ -1045,15 +1047,17 @@ function renderCalendar() {
     html += '<div class="cal-grid-col">';
 
     if (dayJobs.length === 0) {
-      html += `<div class="cal-empty-col ${isPast?'past':''}" onclick="handleEmptyClick('${dateStr}')">
-        <span class="cal-empty-plus">${isPast ? '' : '+'}</span>
-      </div>`;
+      const emptyClass = isPast ? 'past' : '';
+      const emptyPlus = isPast ? '' : '+';
+      html += '<div class="cal-empty-col ' + emptyClass + '" data-date="' + dateStr + '" onclick="handleEmptyClick(this.dataset.date)">'
+            + '<span class="cal-empty-plus">' + emptyPlus + '</span>'
+            + '</div>';
     } else {
       dayJobs.forEach(j => {
         const mp = parseDate(j.montaza_pocetak);
         const mk = parseDate(j.montaza_kraj);
         const izm = parseDate(j.datum_izmjere);
-        const inMont = mp && mk && d >= mp && d <= mk;
+        const inMont = mp && (mk ? (d >= mp && d <= mk && isWorkingDay(d, j)) : isSameDay(d, mp));
         const isIzmjera = izm && isSameDay(izm, d) && !inMont;
 
         let pillClass = inMont
@@ -1100,9 +1104,9 @@ function renderCalendar() {
 
       // Add extra "+" only if not past
       if (!isPast) {
-        html += `<div class="cal-empty-col" style="min-height:28px;margin-top:2px" onclick="handleEmptyClick('${dateStr}')">
-          <span class="cal-empty-plus" style="font-size:14px">+</span>
-        </div>`;
+        html += '<div class="cal-empty-col" style="min-height:28px;margin-top:2px" data-date="' + dateStr + '" onclick="handleEmptyClick(this.dataset.date)">'
+                + '<span class="cal-empty-plus" style="font-size:14px">+</span>'
+                + '</div>';
       }
     }
 

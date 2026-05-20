@@ -838,16 +838,30 @@ select.form-input { cursor: pointer; }
     </div>
     <div class="modal-section">
       <div class="modal-section-title">Termini</div>
-      <div class="form-row">
-        <div class="form-group"><label class="form-label">Datum izmjere</label><input class="form-input" id="f-izm" type="date"></div>
-        <div class="form-group"><label class="form-label">Vrijeme izmjere</label><input class="form-input" id="f-izm-time" type="time" placeholder="08:00"></div>
+
+      <!-- Nabava fields - only shown for nabava type -->
+      <!-- Nabava fields -->
+      <div id="f-nabava-termini" style="display:none">
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">Datum nabave *</label><input class="form-input" id="f-nabava-dat" type="date"></div>
+          <div class="form-group"><label class="form-label">Polazak u</label><input class="form-input" id="f-nabava-time" type="time" placeholder="06:00"></div>
+        </div>
       </div>
-      <div style="height:1px;background:var(--border);margin:6px 0 10px;opacity:0.5"></div>
-      <div class="form-row">
-        <div class="form-group"><label class="form-label">Montaža početak</label><input class="form-input" id="f-mont-poc" type="date"></div>
-        <div class="form-group"><label class="form-label">Početak u</label><input class="form-input" id="f-mont-poc-time" type="time" placeholder="07:00"></div>
+      <!-- Izmjera/Montaža/GV fields - hidden for nabava -->
+      <div id="f-izmjera-termini">
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">Datum izmjere</label><input class="form-input" id="f-izm" type="date"></div>
+          <div class="form-group"><label class="form-label">Vrijeme izmjere / nabave robe</label><input class="form-input" id="f-izm-time" type="time" placeholder="08:00"></div>
+        </div>
       </div>
-      <div class="form-group"><label class="form-label">Montaža kraj (procjena)</label><input class="form-input" id="f-mont-kraj" type="date"></div>
+      <div id="f-montaza-termini">
+        <div style="height:1px;background:var(--border);margin:6px 0 10px;opacity:0.5"></div>
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">Montaža / GV početak</label><input class="form-input" id="f-mont-poc" type="date"></div>
+          <div class="form-group"><label class="form-label">Vrijeme montaže / GV</label><input class="form-input" id="f-mont-poc-time" type="time" placeholder="07:00"></div>
+        </div>
+        <div class="form-group"><label class="form-label">Montaža / GV kraj (procjena)</label><input class="form-input" id="f-mont-kraj" type="date"></div>
+      </div>
       <div class="form-group"><label class="form-label">Napomena</label><input class="form-input" id="f-napomena" placeholder="Bilješka za ekipu..." type="text"></div>
       <div class="weekend-row" style="display:flex;gap:10px;margin-top:4px">
         <label style="display:flex;align-items:center;gap:8px;cursor:pointer;padding:8px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);flex:1">
@@ -1926,8 +1940,8 @@ async function addJob() {
       montaza_kraj: document.getElementById('f-mont-kraj').value||null,
       izmjera_gotova:false, materijal_narucen:false, montaza_gotova:false,
       napomena: document.getElementById('f-napomena').value.trim()||null,
-      datum_nabave: document.getElementById('f-nabava-dat').value||null,
-      vrijeme_nabave: document.getElementById('f-nabava-time').value||null,
+      datum_nabave: document.getElementById('f-nabava-dat')?.value||null,
+      vrijeme_nabave: document.getElementById('f-nabava-time')?.value||null,
       radi_subotu: document.getElementById('f-radi-sub').checked,
       radi_nedjelju: document.getElementById('f-radi-ned').checked,
       arhiva:false,

@@ -1953,7 +1953,7 @@ function renderMonth() {
       const noKraj = !j.montaza_kraj && mp;
 
       let bg, border, typeIcon, timeStr;
-      const isFirstDay = mp && isSameDay(selDate, mp);
+      const isFirstDay = mp && isSameDay(d, mp);
       if (inMont && j.montaza_gotova) {
         bg='rgba(58,184,122,0.2)'; border='rgba(58,184,122,0.5)'; typeIcon='🔧';
         timeStr = isFirstDay && j.montaza_pocetak_vrijeme ? j.montaza_pocetak_vrijeme : '';

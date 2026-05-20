@@ -747,6 +747,16 @@ select.form-input { cursor: pointer; }
       </div>
       <div class="form-group"><label class="form-label">Montaža kraj (procjena)</label><input class="form-input" id="e-mont-kraj" type="date"></div>
       <div class="form-group"><label class="form-label">Napomena</label><input class="form-input" id="e-napomena" type="text"></div>
+      <div style="display:flex;gap:10px;margin-top:4px">
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;padding:8px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);flex:1">
+          <input type="checkbox" id="e-radi-sub" style="accent-color:var(--accent);width:16px;height:16px">
+          <span style="font-size:13px">Radna subota</span>
+        </label>
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;padding:8px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);flex:1">
+          <input type="checkbox" id="e-radi-ned" style="accent-color:var(--accent);width:16px;height:16px">
+          <span style="font-size:13px">Radna nedjelja</span>
+        </label>
+      </div>
     </div>
     <div class="modal-actions">
       <button class="btn-primary" id="edit-save-btn" onclick="saveEdit()">Spremi promjene</button>
@@ -811,6 +821,16 @@ select.form-input { cursor: pointer; }
       </div>
       <div class="form-group"><label class="form-label">Montaža kraj (procjena)</label><input class="form-input" id="f-mont-kraj" type="date"></div>
       <div class="form-group"><label class="form-label">Napomena</label><input class="form-input" id="f-napomena" placeholder="Bilješka za ekipu..." type="text"></div>
+      <div style="display:flex;gap:10px;margin-top:4px">
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;padding:8px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);flex:1">
+          <input type="checkbox" id="f-radi-sub" style="accent-color:var(--accent);width:16px;height:16px">
+          <span style="font-size:13px">Radna subota</span>
+        </label>
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;padding:8px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);flex:1">
+          <input type="checkbox" id="f-radi-ned" style="accent-color:var(--accent);width:16px;height:16px">
+          <span style="font-size:13px">Radna nedjelja</span>
+        </label>
+      </div>
     </div>
     <div class="modal-actions">
       <button class="btn-primary" onclick="addJob()">Dodaj posao</button>
@@ -946,19 +966,30 @@ function renderCalendar() {
   const today = new Date(); today.setHours(0,0,0,0);
 
   // Week days: Mon-Fri
-  const weekDays = [];
-  for (let i = 0; i < 6; i++) weekDays.push(addDays(currentWeekMonday, i));
+  // Always show Mon-Fri; add Sat/Sun only if any job is active those days
+  const allSixDays = [];
+  for (let i = 0; i < 7; i++) allSixDays.push(addDays(currentWeekMonday, i));
+  const sat = allSixDays[5], sun = allSixDays[6];
+  const satJobs = jobs.filter(j => isJobActiveOnDate(j, sat));
+  const sunJobs = jobs.filter(j => isJobActiveOnDate(j, sun));
+  const showSat = satJobs.length > 0;
+  const showSun = sunJobs.length > 0;
+  const weekDays = allSixDays.slice(0, 5); // Mon-Fri
+  if (showSat) weekDays.push(sat);
+  if (showSun) weekDays.push(sun);
+  const numCols = weekDays.length;
 
   // Update nav
   const monthStart = MONTHS_SHORT[weekDays[0].getMonth()];
-  const monthEnd   = MONTHS_SHORT[weekDays[5].getMonth()];
-  const monthLabel = weekDays[0].getMonth() === weekDays[5].getMonth()
+  const lastDay = weekDays[weekDays.length-1];
+  const monthEnd   = MONTHS_SHORT[lastDay.getMonth()];
+  const monthLabel = weekDays[0].getMonth() === lastDay.getMonth()
     ? MONTHS_HR[weekDays[0].getMonth()] + ' ' + weekDays[0].getFullYear()
-    : monthStart + '–' + monthEnd + ' ' + weekDays[5].getFullYear();
+    : monthStart + '–' + monthEnd + ' ' + lastDay.getFullYear();
   document.getElementById('week-label').textContent = monthLabel;
 
   const wStart = weekDays[0].toLocaleDateString('hr-HR',{day:'2-digit',month:'2-digit'});
-  const wEnd   = weekDays[5].toLocaleDateString('hr-HR',{day:'2-digit',month:'2-digit'});
+  const wEnd   = weekDays[weekDays.length-1].toLocaleDateString('hr-HR',{day:'2-digit',month:'2-digit'});
   document.getElementById('week-sub').textContent = wStart + ' – ' + wEnd;
 
   const isCurrentWeek = isSameDay(currentWeekMonday, getMondayOf(new Date()));
@@ -970,6 +1001,10 @@ function renderCalendar() {
   let html = '';
 
   // Day headers row
+  // Update CSS grid dynamically based on visible days
+  const calGridCols = '40px repeat(' + numCols + ', 1fr)';
+  document.querySelectorAll('.cal-day-row, .cal-grid, .izmjere-row-grid, .overlap-row-grid, .montaza-row-grid').forEach(el => el.style.gridTemplateColumns = calGridCols);
+
   html += '<div class="cal-day-row">';
   html += '<div class="cal-corner"></div>';
   weekDays.forEach(d => {
@@ -991,11 +1026,7 @@ function renderCalendar() {
     const dateStr = toDateStr(d);
 
     // Find jobs active on this day
-    const dayJobs = jobs.filter(j => {
-      const mp = parseDate(j.montaza_pocetak);
-      const mk = parseDate(j.montaza_kraj);
-      const izm = parseDate(j.datum_izmjere);
-      const inMont = mp && (mk ? (d >= mp && d <= mk) : isSameDay(d, mp));
+    const dayJobs = jobs.filter(j => isJobActiveOnDate(j, d));
       const isIzm = izm && isSameDay(izm, d);
       return inMont || isIzm;
     });
@@ -1084,9 +1115,8 @@ function renderCalendar() {
   const weekMontazaJobs = [];
   jobs.forEach(j => {
     const mp = parseDate(j.montaza_pocetak);
-    const mk = parseDate(j.montaza_kraj);
     if (!mp) return;
-    const activeDays = weekDays.filter(d => mk ? (d >= mp && d <= mk) : isSameDay(d, mp));
+    const activeDays = weekDays.filter(d => isJobActiveOnDate(j, d) && !isSameDay(d, parseDate(j.datum_izmjere)));
     if (activeDays.length > 0 && !j.montaza_gotova) weekMontazaJobs.push(j);
   });
 
@@ -1151,7 +1181,7 @@ function renderCalendar() {
     const montOnDay = jobs.filter(j => {
       const mp = parseDate(j.montaza_pocetak);
       const mk = parseDate(j.montaza_kraj);
-      return mp && mk && d >= mp && d <= mk && !j.montaza_gotova;
+      return mp && (mk ? (d >= mp && d <= mk) : isSameDay(d, mp)) && isWorkingDay(d, j) && !j.montaza_gotova;
     });
     return montOnDay.length > 1;
   });
@@ -1188,8 +1218,14 @@ function isMobile() {
 function renderMobileCalendar() {
   const jobs = getJobs().filter(j => !j.arhiva);
   const today = new Date(); today.setHours(0,0,0,0);
-  const weekDays = [];
-  for (let i = 0; i < 6; i++) weekDays.push(addDays(currentWeekMonday, i));
+  const allSixDaysMob = [];
+  for (let i = 0; i < 7; i++) allSixDaysMob.push(addDays(currentWeekMonday, i));
+  const satMob = allSixDaysMob[5], sunMob = allSixDaysMob[6];
+  const showSatMob = jobs.filter(j => isJobActiveOnDate(j, satMob)).length > 0;
+  const showSunMob = jobs.filter(j => isJobActiveOnDate(j, sunMob)).length > 0;
+  const weekDays = allSixDaysMob.slice(0, 5);
+  if (showSatMob) weekDays.push(satMob);
+  if (showSunMob) weekDays.push(sunMob);
 
   // Default selected day = today if in week, else monday
   if (!mobileSelectedDay || !weekDays.find(d => toDateStr(d) === mobileSelectedDay)) {
@@ -1204,12 +1240,7 @@ function renderMobileCalendar() {
     const isActive = ds === mobileSelectedDay;
     const isToday = isSameDay(d, today);
     const isPast = d < today && !isToday;
-    const dayJobs = jobs.filter(j => {
-      const mp = parseDate(j.montaza_pocetak);
-      const mk = parseDate(j.montaza_kraj);
-      const izm = parseDate(j.datum_izmjere);
-      return (mp && (mk ? (d >= mp && d <= mk) : isSameDay(d, mp))) || (izm && isSameDay(izm, d));
-    });
+    const dayJobs = jobs.filter(j => isJobActiveOnDate(j, d));
     const dot = dayJobs.length > 0
       ? '<div style="width:5px;height:5px;border-radius:50%;background:' + (isActive ? '#0f1117' : 'var(--accent)') + ';margin:3px auto 0"></div>'
       : '<div style="height:8px"></div>';
@@ -1223,12 +1254,7 @@ function renderMobileCalendar() {
   // ── Selected day body ──
   const selDate = parseDate(mobileSelectedDay);
   const isPast = selDate < today && !isSameDay(selDate, today);
-  const dayJobs = jobs.filter(j => {
-    const mp = parseDate(j.montaza_pocetak);
-    const mk = parseDate(j.montaza_kraj);
-    const izm = parseDate(j.datum_izmjere);
-    return (mp && (mk ? (selDate >= mp && selDate <= mk) : isSameDay(selDate, mp))) || (izm && isSameDay(izm, selDate));
-  });
+  const dayJobs = jobs.filter(j => isJobActiveOnDate(j, selDate));
 
   dayJobs.sort((a,b) => {
     const getT = j => {
@@ -1316,6 +1342,49 @@ function selectMobileDay(dateStr) {
     const active = nav.querySelector('.mobile-day-pill.active');
     if (active) active.scrollIntoView({behavior:'smooth', block:'nearest', inline:'center'});
   }, 50);
+}
+
+// ── WORKING DAYS HELPER ───────────────────────────────────────────────────
+// Returns true if this date is a "working day" for this job
+function isWorkingDay(d, job) {
+  const dow = d.getDay(); // 0=Sun, 6=Sat
+  if (dow === 0) return !!job.radi_nedjelju;
+  if (dow === 6) return !!job.radi_subotu;
+  return true; // Mon-Fri always working
+}
+
+// Given a job with montaza_pocetak and duration (in working days),
+// return the actual end date accounting for skip-weekends logic
+function calcEndDate(startDate, workingDays, job) {
+  let d = new Date(startDate);
+  let counted = 0;
+  while (counted < workingDays) {
+    if (isWorkingDay(d, job)) counted++;
+    if (counted < workingDays) d = addDays(d, 1);
+  }
+  return d;
+}
+
+// Returns true if job is "active" on date d (considering working days skip)
+function isJobActiveOnDate(job, d) {
+  const mp = parseDate(job.montaza_pocetak);
+  const mk = parseDate(job.montaza_kraj);
+  const izm = parseDate(job.datum_izmjere);
+
+  // Izmjera check
+  const isIzm = izm && isSameDay(izm, d);
+
+  // Montaža check - must be between start and end AND be a working day for this job
+  let inMont = false;
+  if (mp) {
+    if (mk) {
+      inMont = d >= mp && d <= mk && isWorkingDay(d, job);
+    } else {
+      inMont = isSameDay(d, mp);
+    }
+  }
+
+  return inMont || isIzm;
 }
 
 // ── WEEK NAVIGATION ────────────────────────────────────────────────────────
@@ -1541,6 +1610,8 @@ function openEditModal() {
   document.getElementById('e-mont-poc-time').value = job.montaza_pocetak_vrijeme || '';
   document.getElementById('e-mont-kraj').value = job.montaza_kraj || '';
   document.getElementById('e-napomena').value = job.napomena || '';
+  document.getElementById('e-radi-sub').checked = !!job.radi_subotu;
+  document.getElementById('e-radi-ned').checked = !!job.radi_nedjelju;
 
   document.getElementById('edit-modal').classList.add('open');
 }
@@ -1577,6 +1648,8 @@ async function saveEdit() {
       montaza_pocetak_vrijeme: document.getElementById('e-mont-poc-time').value || null,
       montaza_kraj: document.getElementById('e-mont-kraj').value || null,
       napomena: document.getElementById('e-napomena').value.trim() || null,
+      radi_subotu: document.getElementById('e-radi-sub').checked,
+      radi_nedjelju: document.getElementById('e-radi-ned').checked,
     };
 
     // Update in cache
@@ -1673,6 +1746,8 @@ function updateTipForm() {
 
 function closeAddModal() {
     document.getElementById('add-modal').classList.remove('open');
+    document.getElementById('f-radi-sub').checked = false;
+    document.getElementById('f-radi-ned').checked = false;
     ['f-kupac','f-adresa','f-tel','f-iznos','f-avans','f-izm','f-izm-time','f-mont-poc','f-mont-poc-time','f-mont-kraj','f-napomena'].forEach(id=>{
       document.getElementById(id).value='';
     });
@@ -1706,6 +1781,8 @@ async function addJob() {
       montaza_kraj: document.getElementById('f-mont-kraj').value||null,
       izmjera_gotova:false, materijal_narucen:false, montaza_gotova:false,
       napomena: document.getElementById('f-napomena').value.trim()||null,
+      radi_subotu: document.getElementById('f-radi-sub').checked,
+      radi_nedjelju: document.getElementById('f-radi-ned').checked,
       arhiva:false,
       created: toDateStr(new Date())
     };
@@ -1760,13 +1837,7 @@ function renderMonth() {
   const jobsPerDay = {};
   for (let day = 1; day <= daysInMonth; day++) {
     const d = new Date(currentMonthYear, currentMonth, day);
-    jobsPerDay[day] = jobs.filter(j => {
-      const mp = parseDate(j.montaza_pocetak);
-      const mk = parseDate(j.montaza_kraj);
-      const izm = parseDate(j.datum_izmjere);
-      const inMont = mp && (mk ? (d >= mp && d <= mk) : isSameDay(d, mp));
-      return inMont || (izm && isSameDay(izm, d));
-    });
+    jobsPerDay[day] = jobs.filter(j => isJobActiveOnDate(j, d));
   }
   const maxJobs = Math.max(1, ...Object.values(jobsPerDay).map(j => j.length));
   const density = maxJobs <= 2 ? 'full' : maxJobs === 3 ? 'medium' : 'compact';

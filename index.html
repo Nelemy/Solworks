@@ -179,7 +179,7 @@ body { background: var(--bg); color: var(--text); font-family: var(--font-body);
 /* Day columns */
 .cal-day-row {
   display: grid;
-  grid-template-columns: 52px repeat(6, 1fr);
+  grid-template-columns: 52px repeat(var(--week-cols, 5), 1fr);
   gap: 4px;
   margin-bottom: 4px;
 }
@@ -320,7 +320,7 @@ body { background: var(--bg); color: var(--text); font-family: var(--font-body);
   border-bottom: 1px solid var(--border);
 }
 .montaza-row-grid {
-  display: grid; grid-template-columns: 52px repeat(6, 1fr); gap: 4px;
+  display: grid; grid-template-columns: 52px repeat(var(--week-cols, 5), 1fr); gap: 4px;
   padding: 6px;
 }
 .montaza-day-cell {
@@ -539,8 +539,8 @@ select.form-input { cursor: pointer; }
   .btn-add { height: 38px; padding: 0 16px; font-size: 13px; }
   .week-nav { padding: 10px 16px; }
   .cal-week { padding: 12px 12px 100px; }
-  .cal-day-row, .cal-grid { grid-template-columns: 52px repeat(6, 1fr); gap: 4px; }
-  .izmjere-row-grid, .overlap-row-grid, .montaza-row-grid { grid-template-columns: 52px repeat(6, 1fr); gap: 4px; }
+  .cal-day-row, .cal-grid { grid-template-columns: 52px repeat(var(--week-cols, 5), 1fr); gap: 4px; }
+  .izmjere-row-grid, .overlap-row-grid, .montaza-row-grid { grid-template-columns: 52px repeat(var(--week-cols, 5), 1fr); gap: 4px; }
   .cal-day-num { font-size: 20px; }
   .job-pill { min-height: 62px; padding: 8px 10px; }
   .job-pill-name { font-size: 13px; }
@@ -556,8 +556,8 @@ select.form-input { cursor: pointer; }
   .week-nav { padding: 12px 24px; }
   .week-nav-label { font-size: 16px; }
   .cal-week { padding: 16px 20px 80px; }
-  .cal-day-row, .cal-grid { grid-template-columns: 64px repeat(6, 1fr); gap: 6px; }
-  .izmjere-row-grid, .overlap-row-grid, .montaza-row-grid { grid-template-columns: 64px repeat(6, 1fr); gap: 6px; }
+  .cal-day-row, .cal-grid { grid-template-columns: 64px repeat(var(--week-cols, 5), 1fr); gap: 6px; }
+  .izmjere-row-grid, .overlap-row-grid, .montaza-row-grid { grid-template-columns: 64px repeat(var(--week-cols, 5), 1fr); gap: 6px; }
   .cal-empty-col { min-height: 72px; }
   .job-pill { min-height: 68px; }
   .cal-day-num { font-size: 22px; }
@@ -1002,8 +1002,8 @@ function renderCalendar() {
 
   // Day headers row
   // Update CSS grid dynamically based on visible days
-  const calGridCols = '40px repeat(' + numCols + ', 1fr)';
-  document.querySelectorAll('.cal-day-row, .cal-grid, .izmjere-row-grid, .overlap-row-grid, .montaza-row-grid').forEach(el => el.style.gridTemplateColumns = calGridCols);
+  // Set CSS custom property for grid columns - applies to all grid elements
+  document.getElementById('view-kalendar').style.setProperty('--week-cols', numCols);
 
   html += '<div class="cal-day-row">';
   html += '<div class="cal-corner"></div>';
@@ -1130,7 +1130,7 @@ function renderCalendar() {
       const noKraj = !mk;
       const startStr = mp.toLocaleDateString("hr-HR", {weekday:"short", day:"numeric", month:"numeric"});
       const workDayCount = mk ? countWorkingDays(j) : null;
-      const actualEndDate = workDayCount ? calcEndDate(mp, workDayCount, j) : null;
+      const actualEndDate = mk ? getActualEnd(j) : null;
       const endStr = actualEndDate ? actualEndDate.toLocaleDateString("hr-HR", {weekday:"short", day:"numeric", month:"numeric"}) : '?';
       const time = j.montaza_pocetak_vrijeme ? ' u ' + j.montaza_pocetak_vrijeme : '';
       const totalWorkDays = mk ? countWorkingDays(j) : null;
@@ -1368,18 +1368,30 @@ function calcEndDate(startDate, workingDays, job) {
   return d;
 }
 
-// Count working days between start and end for a job
-function countWorkingDays(job) {
+// Calendar days from start to stored end (inclusive) = intended duration
+function getIntendedDays(job) {
   const mp = parseDate(job.montaza_pocetak);
   const mk = parseDate(job.montaza_kraj);
   if (!mp || !mk) return null;
+  return Math.round((mk - mp) / 86400000) + 1;
+}
+
+// Count working days between start and end for a job (for display)
+function countWorkingDays(job) {
+  const intended = getIntendedDays(job);
+  if (!intended) return null;
+  // Count how many of those intended days are working days
+  // starting from mp, forward intended count of working days
+  const mp = parseDate(job.montaza_pocetak);
   let count = 0;
+  let workCount = 0;
   let d = new Date(mp);
-  while (d <= mk) {
-    if (isWorkingDay(d, job)) count++;
+  while (workCount < intended) {
+    if (isWorkingDay(d, job)) workCount++;
+    count++;
     d = addDays(d, 1);
   }
-  return count;
+  return intended; // intended days = total working slots
 }
 
 // Which working day number is d for this job (1-based), or null if not active
@@ -1396,6 +1408,17 @@ function workingDayNumber(job, d) {
   return count;
 }
 
+// Returns the actual last working day for a job's montaža
+function getActualEnd(job) {
+  const mp = parseDate(job.montaza_pocetak);
+  const mk = parseDate(job.montaza_kraj);
+  if (!mp) return null;
+  if (!mk) return mp;
+  // Use calendar day count as intended duration, then find that many working days forward
+  const intendedDays = getIntendedDays(job);
+  return calcEndDate(mp, intendedDays, job);
+}
+
 // Returns true if job is "active" on date d (considering working days skip)
 function isJobActiveOnDate(job, d) {
   const mp = parseDate(job.montaza_pocetak);
@@ -1405,15 +1428,11 @@ function isJobActiveOnDate(job, d) {
   // Izmjera check
   const isIzm = izm && isSameDay(izm, d);
 
-  // Montaža check
+  // Montaža check - use actual working-day end, not raw montaza_kraj
   let inMont = false;
   if (mp) {
     if (mk) {
-      // Count how many working days are between mp and mk (inclusive)
-      const totalWorkingDays = countWorkingDays(job);
-      // Find the actual last working day (= start + totalWorkingDays working days)
-      const actualEnd = calcEndDate(mp, totalWorkingDays, job);
-      // Active if d is between mp and actualEnd AND is a working day for this job
+      const actualEnd = getActualEnd(job);
       inMont = d >= mp && d <= actualEnd && isWorkingDay(d, job);
     } else {
       inMont = isSameDay(d, mp);

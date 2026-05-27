@@ -1272,7 +1272,57 @@ function renderCalendar() {
   html += '</div></div>';
 
   document.getElementById('cal-week-body').innerHTML = html;
+  syncCalendarRowHeights();
   if (isMobile()) renderMobileCalendar();
+}
+
+// ── SYNC CALENDAR ROW HEIGHTS ─────────────────────────────────────────────
+// After rendering, make all pills in the same "row slot" across columns equal height
+function syncCalendarRowHeights() {
+  const grid = document.getElementById('cal-week-body');
+  if (!grid) return;
+
+  // Find all day columns (direct children of cal-grid div, skip corner div)
+  const calGrid = grid.querySelector('.cal-grid');
+  if (!calGrid) return;
+
+  // Get all column divs (skip the first empty corner div)
+  const cols = Array.from(calGrid.children).slice(1);
+  if (!cols.length) return;
+
+  // Get pills per column
+  const pillsPerCol = cols.map(col => {
+    return Array.from(col.children).filter(el =>
+      el.classList.contains('job-pill') || el.classList.contains('cal-empty-col')
+    );
+  });
+
+  // Find max number of pills in any column
+  const maxPills = Math.max(...pillsPerCol.map(p => p.length));
+
+  // Reset all heights first
+  cols.forEach(col => {
+    Array.from(col.children).forEach(el => { el.style.minHeight = ''; });
+  });
+
+  // Sync heights row by row
+  for (let row = 0; row < maxPills; row++) {
+    // Find max natural height across all columns for this row
+    let maxH = 0;
+    pillsPerCol.forEach(pills => {
+      if (pills[row]) {
+        pills[row].style.minHeight = '';
+        const h = pills[row].getBoundingClientRect().height;
+        if (h > maxH) maxH = h;
+      }
+    });
+    // Apply that height to all columns in this row
+    if (maxH > 0) {
+      pillsPerCol.forEach(pills => {
+        if (pills[row]) pills[row].style.minHeight = maxH + 'px';
+      });
+    }
+  }
 }
 
 // ── MOBILE DAY STATE ──────────────────────────────────────────────────────
@@ -2273,6 +2323,11 @@ function hideLoading() {
 }
 
 // ── INIT ───────────────────────────────────────────────────────────────────
+window.addEventListener('resize', () => {
+  const calTab = document.querySelector('#view-kalendar.active');
+  if (calTab) syncCalendarRowHeights();
+});
+
 (async () => {
   showLoading('Učitavanje poslova...');
   try {

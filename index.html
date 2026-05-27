@@ -105,6 +105,16 @@ body { background: var(--bg); color: var(--text); font-family: var(--font-body);
 .cal-week {
   padding: 10px 10px 100px;
 }
+/* New: unified grid where rows align across all day columns */
+.cal-unified-grid {
+  display: grid;
+  gap: 4px;
+  margin-top: 4px;
+  align-items: stretch;
+}
+.cal-unified-grid > * {
+  min-height: 60px;
+}
 
 /* ── MOBILE DAY VIEW ── */
 .mobile-day-nav {
@@ -215,13 +225,15 @@ body { background: var(--bg); color: var(--text); font-family: var(--font-body);
 /* Job blocks in calendar */
 .cal-grid {
   display: grid;
-  grid-template-columns: 52px repeat(6, 1fr);
+  grid-template-columns: 52px repeat(var(--week-cols, 5), 1fr);
   gap: 4px;
   margin-top: 4px;
+  align-items: stretch;
 }
 .cal-grid-col {
   display: flex; flex-direction: column; gap: 3px; min-height: 60px;
   padding: 4px 0;
+  align-items: stretch;
 }
 .cal-empty-col {
   border-radius: var(--radius-sm);
@@ -249,19 +261,25 @@ body { background: var(--bg); color: var(--text); font-family: var(--font-body);
   display: flex; flex-direction: column; justify-content: flex-start; gap: 2px;
   touch-action: manipulation;
   user-select: none;
+  word-break: break-word;
 }
 .job-pill:active { opacity: 0.8; }
-.job-pill-montaza  { background: rgba(232,80,58,0.18);  border: 1px solid rgba(232,80,58,0.4); }
-.job-pill-izmjera  { background: rgba(61,126,255,0.18); border: 1px solid rgba(61,126,255,0.4); }
-.job-pill-nabava   { background: rgba(232,160,39,0.18); border: 1px solid rgba(232,160,39,0.4); }
-.job-pill-garaza   { background: rgba(138,92,246,0.18); border: 1px solid rgba(138,92,246,0.4); }
-.job-pill-gotovo  { background: rgba(58,184,122,0.12); border: 1px solid rgba(58,184,122,0.3); opacity: 0.7; }
+/* Izmjera — plava */
+.job-pill-izmjera  { background: rgba(61,126,255,0.15); border: 1px solid rgba(61,126,255,0.5); border-left: 3px solid #3d7eff; }
+/* Montaža — crvena */
+.job-pill-montaza  { background: rgba(232,80,58,0.15);  border: 1px solid rgba(232,80,58,0.5);  border-left: 3px solid #e8503a; }
+/* Nabava mat. — žuta/narančasta */
+.job-pill-nabava   { background: rgba(232,160,39,0.15); border: 1px solid rgba(232,160,39,0.5); border-left: 3px solid #e8a027; }
+/* Garažna vrata — ljubičasta */
+.job-pill-garaza   { background: rgba(138,92,246,0.15); border: 1px solid rgba(138,92,246,0.5); border-left: 3px solid #8a5cf6; }
+/* Gotovo — zelena */
+.job-pill-gotovo  { background: rgba(58,184,122,0.12); border: 1px solid rgba(58,184,122,0.3); border-left: 3px solid #3ab87a; opacity: 0.75; }
 .job-pill-name { font-weight: 700; color: var(--text); font-size: 13px; line-height: 1.2; }
 .job-pill-sub { font-size: 11px; color: var(--muted); margin-top: 1px; }
 .job-pill-addr { font-size: 10px; color: var(--muted); opacity: 0.8; margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.job-pill-montaza .job-pill-sub { color: var(--red); }
-.job-pill-izmjera .job-pill-sub { color: var(--accent2); }
-.job-pill-nabava  .job-pill-sub { color: var(--accent); }
+.job-pill-montaza .job-pill-sub { color: #e8503a; }
+.job-pill-izmjera .job-pill-sub { color: #3d7eff; }
+.job-pill-nabava  .job-pill-sub { color: #e8a027; }
 .job-pill-garaza  .job-pill-sub { color: #8a5cf6; }
 .job-pill-gotovo .job-pill-sub  { color: var(--green); }
 .overlap-dot {
@@ -751,19 +769,19 @@ select.form-input { cursor: pointer; }
       <div id="e-izmjera-termini">
       <div class="form-row">
         <div class="form-group"><label class="form-label">Datum izmjere</label><input class="form-input" id="e-izm" type="date"></div>
-        <div class="form-group"><label class="form-label">Vrijeme izmjere</label><input class="form-input" id="e-izm-time" type="time"></div>
+        <div class="form-group"><label class="form-label" id="e-izm-time-label">Vrijeme izmjere</label><input class="form-input" id="e-izm-time" type="time"></div>
       </div>
       </div>
       <div id="e-nabava-termini" style="display:none">
       <div class="form-row">
         <div class="form-group"><label class="form-label">Datum nabave *</label><input class="form-input" id="e-nabava-dat" type="date"></div>
-        <div class="form-group"><label class="form-label">Polazak u</label><input class="form-input" id="e-nabava-time" type="time" placeholder="06:00"></div>
+        <div class="form-group"><label class="form-label" id="e-nabava-time-label">Vrijeme nabave materijala</label><input class="form-input" id="e-nabava-time" type="time" placeholder="06:00"></div>
       </div>
       </div>
 <div id="e-montaza-termini"><div style="height:1px;background:var(--border);margin:6px 0 10px;opacity:0.5"></div>
       <div class="form-row">
         <div class="form-group"><label class="form-label">Montaža / GV početak</label><input class="form-input" id="e-mont-poc" type="date"></div>
-        <div class="form-group"><label class="form-label">Početak u</label><input class="form-input" id="e-mont-poc-time" type="time"></div>
+        <div class="form-group"><label class="form-label" id="e-mont-poc-time-label">Vrijeme montaže</label><input class="form-input" id="e-mont-poc-time" type="time"></div>
       </div>
       <div class="form-group"><label class="form-label">Montaža / GV kraj (procjena)</label><input class="form-input" id="e-mont-kraj" type="date"></div>
       </div><!-- /e-montaza-termini -->
@@ -845,21 +863,21 @@ select.form-input { cursor: pointer; }
       <div id="f-nabava-termini" style="display:none">
         <div class="form-row">
           <div class="form-group"><label class="form-label">Datum nabave *</label><input class="form-input" id="f-nabava-dat" type="date"></div>
-          <div class="form-group"><label class="form-label">Polazak u</label><input class="form-input" id="f-nabava-time" type="time" placeholder="06:00"></div>
+          <div class="form-group"><label class="form-label" id="f-nabava-time-label">Vrijeme nabave materijala</label><input class="form-input" id="f-nabava-time" type="time" placeholder="06:00"></div>
         </div>
       </div>
       <!-- Izmjera/Montaža/GV fields - hidden for nabava -->
       <div id="f-izmjera-termini">
         <div class="form-row">
           <div class="form-group"><label class="form-label">Datum izmjere</label><input class="form-input" id="f-izm" type="date"></div>
-          <div class="form-group"><label class="form-label">Vrijeme izmjere / nabave robe</label><input class="form-input" id="f-izm-time" type="time" placeholder="08:00"></div>
+          <div class="form-group"><label class="form-label" id="f-izm-time-label">Vrijeme izmjere</label><input class="form-input" id="f-izm-time" type="time" placeholder="08:00"></div>
         </div>
       </div>
       <div id="f-montaza-termini">
         <div style="height:1px;background:var(--border);margin:6px 0 10px;opacity:0.5"></div>
         <div class="form-row">
           <div class="form-group"><label class="form-label">Montaža / GV početak</label><input class="form-input" id="f-mont-poc" type="date"></div>
-          <div class="form-group"><label class="form-label">Vrijeme montaže / GV</label><input class="form-input" id="f-mont-poc-time" type="time" placeholder="07:00"></div>
+          <div class="form-group"><label class="form-label" id="f-mont-poc-time-label">Vrijeme montaže</label><input class="form-input" id="f-mont-poc-time" type="time" placeholder="07:00"></div>
         </div>
         <div class="form-group"><label class="form-label">Montaža / GV kraj (procjena)</label><input class="form-input" id="f-mont-kraj" type="date"></div>
       </div>
@@ -1062,102 +1080,101 @@ function renderCalendar() {
   });
   html += '</div>';
 
-  // Jobs grid
-  html += '<div class="cal-grid">';
-  html += '<div></div>'; // empty corner
-
-  weekDays.forEach(d => {
+  // Build per-day job lists first
+  const perDay = weekDays.map(d => {
     const isPast = d < today && !isSameDay(d, today);
     const dateStr = toDateStr(d);
-
-    // Find jobs active on this day
     const dayJobs = jobs.filter(j => isJobActiveOnDate(j, d));
-
-    // Sort by time within the day
     dayJobs.sort((a, b) => {
-      const getTime = (j) => {
+      const getT = j => {
         const mp = parseDate(j.montaza_pocetak);
-        const izm = parseDate(j.datum_izmjere);
-        const inMont = mp && parseDate(j.montaza_kraj) && d >= mp && d <= parseDate(j.montaza_kraj);
-        const t = inMont ? (j.montaza_pocetak_vrijeme || '00:00') : (j.vrijeme_izmjere || '00:00');
-        return t;
+        const mk2 = parseDate(j.montaza_kraj);
+        const inM = mp && (mk2 ? d >= mp && d <= getActualEnd(j) && isWorkingDay(d, j) : isSameDay(d, mp));
+        return inM ? (j.montaza_pocetak_vrijeme || '00:00') : (j.vrijeme_izmjere || '00:00');
       };
-      return getTime(a).localeCompare(getTime(b));
+      return getT(a).localeCompare(getT(b));
     });
-    html += '<div class="cal-grid-col">';
+    return { d, isPast, dateStr, dayJobs };
+  });
+
+  // Max jobs any day has = number of rows
+  const maxRows = Math.max(1, ...perDay.map(x => x.dayJobs.length));
+
+  // Render row by row so CSS grid aligns heights across columns
+  html += '<div class="cal-grid" style="grid-template-rows: repeat(' + (maxRows + 1) + ', auto)">';
+  html += '<div></div>'; // empty corner
+
+  // Row 0: first job slot per column (or empty)
+  // We render column by column but each column renders ALL its rows at once
+  // using explicit grid-row placement
+
+  // Actually render as before but use CSS to sync heights:
+  // Each cal-grid-col gets same stretch height via align-items:stretch on parent
+  weekDays.forEach((d, di) => {
+    const { isPast, dateStr, dayJobs } = perDay[di];
+
+    html += '<div class="cal-grid-col" style="display:flex;flex-direction:column;gap:3px">';
+
+    const buildPill = (j) => {
+      const mp = parseDate(j.montaza_pocetak);
+      const mk = parseDate(j.montaza_kraj);
+      const izm = parseDate(j.datum_izmjere);
+      const actualEnd = mp && mk ? getActualEnd(j) : null;
+      const inMont = mp && (mk ? (d >= mp && d <= actualEnd && isWorkingDay(d, j)) : isSameDay(d, mp));
+      const tip = j.tip_posla || 'izmjera';
+
+      let pillClass;
+      if (tip === 'nabava') pillClass = 'job-pill-nabava';
+      else if (tip === 'garaza') pillClass = j.montaza_gotova ? 'job-pill-gotovo' : 'job-pill-garaza';
+      else if (inMont) pillClass = j.montaza_gotova ? 'job-pill-gotovo' : 'job-pill-montaza';
+      else pillClass = 'job-pill-izmjera';
+
+      let sub = '';
+      if (inMont && !j.montaza_gotova) {
+        const isFirstDay = isSameDay(d, mp);
+        const totalDays = getIntendedDays(j);
+        let dayNum = 0;
+        let cur = new Date(mp);
+        while (cur <= d) { if (isWorkingDay(cur, j)) dayNum++; cur = addDays(cur, 1); }
+        const timeStr = isFirstDay && j.montaza_pocetak_vrijeme ? j.montaza_pocetak_vrijeme + ' · ' : '';
+        sub = timeStr + dayNum + '/' + totalDays;
+      } else if (inMont && j.montaza_gotova) {
+        sub = '✓';
+      } else if (tip === 'nabava') {
+        const dn = parseDate(j.datum_nabave);
+        sub = dn && isSameDay(d, dn) ? (j.vrijeme_nabave || '') : '';
+      } else {
+        sub = j.vrijeme_izmjere || '';
+      }
+
+      const hasOverlap = inMont && !j.montaza_gotova && jobs.some(other => {
+        if (other.id === j.id || other.montaza_gotova) return false;
+        const op = parseDate(other.montaza_pocetak);
+        const ok = parseDate(other.montaza_kraj);
+        return op && ok && op <= (mk||mp) && ok >= mp;
+      });
+
+      const noKraj = !j.montaza_kraj && mp;
+      const tipIcon = tip === 'nabava' ? '🚐' : tip === 'garaza' ? '🚪' : tip === 'montaza' ? '🔧' : '📐';
+      const pillStyle = noKraj ? 'border-style:dashed;' : '';
+      const overlapDot = hasOverlap ? '<div class="overlap-dot"></div>' : '';
+      const krajLabel = noKraj ? '<div style="position:absolute;top:4px;right:6px;font-size:9px;color:var(--accent);font-weight:700">kraj?</div>' : '';
+      return '<div class="job-pill ' + pillClass + '" style="' + pillStyle + 'flex:1" onclick="openDetail(' + j.id + ')">'
+           + overlapDot + krajLabel
+           + '<div class="job-pill-name">' + tipIcon + ' ' + j.kupac + '</div>'
+           + '<div class="job-pill-sub">' + sub + '</div>'
+           + '<div class="job-pill-addr">📍 ' + j.adresa.split(',')[0] + '</div>'
+           + '</div>';
+    };
 
     if (dayJobs.length === 0) {
       const emptyClass = isPast ? 'past' : '';
       const emptyPlus = isPast ? '' : '+';
-      html += '<div class="cal-empty-col ' + emptyClass + '" data-date="' + dateStr + '" onclick="handleEmptyClick(this.dataset.date)">'
+      html += '<div class="cal-empty-col ' + emptyClass + '" style="flex:1" data-date="' + dateStr + '" onclick="handleEmptyClick(this.dataset.date)">'
             + '<span class="cal-empty-plus">' + emptyPlus + '</span>'
             + '</div>';
     } else {
-      dayJobs.forEach(j => {
-        const mp = parseDate(j.montaza_pocetak);
-        const mk = parseDate(j.montaza_kraj);
-        const izm = parseDate(j.datum_izmjere);
-        // Use getActualEnd so days after mk but within working-day range show as montaža
-        const actualEnd = mp && mk ? getActualEnd(j) : null;
-        const inMont = mp && (mk ? (d >= mp && d <= actualEnd && isWorkingDay(d, j)) : isSameDay(d, mp));
-        const isIzmjera = izm && isSameDay(izm, d) && !inMont;
-        const tip = j.tip_posla || 'izmjera';
-
-        let pillClass;
-        if (tip === 'nabava') pillClass = 'job-pill-nabava';
-        else if (tip === 'garaza') pillClass = j.montaza_gotova ? 'job-pill-gotovo' : 'job-pill-garaza';
-        else if (inMont) pillClass = j.montaza_gotova ? 'job-pill-gotovo' : 'job-pill-montaza';
-        else pillClass = 'job-pill-izmjera';
-
-        let sub = '';
-        if (inMont && !j.montaza_gotova) {
-          const isFirstDay = isSameDay(d, mp);
-          const totalDays = getIntendedDays(j);
-          // Which working day number is today?
-          let dayNum = 0;
-          let cur = new Date(mp);
-          while (cur <= d) {
-            if (isWorkingDay(cur, j)) dayNum++;
-            cur = addDays(cur, 1);
-          }
-          if (isFirstDay) {
-            const timeStr = j.montaza_pocetak_vrijeme ? j.montaza_pocetak_vrijeme + ' · ' : '';
-            sub = timeStr + dayNum + '/' + totalDays;
-          } else {
-            sub = dayNum + '/' + totalDays;
-          }
-        } else if (inMont && j.montaza_gotova) {
-          sub = '✓';
-        } else if (tip === 'nabava') {
-          const dn = parseDate(j.datum_nabave);
-          sub = dn && isSameDay(d, dn) ? (j.vrijeme_nabave || '') : '';
-        } else {
-          const tIzm = j.vrijeme_izmjere ? j.vrijeme_izmjere : '';
-          sub = tIzm || '';
-        }
-
-        // Check overlap
-        const hasOverlap = inMont && !j.montaza_gotova && jobs.some(other => {
-          if (other.id === j.id || other.montaza_gotova) return false;
-          const op = parseDate(other.montaza_pocetak);
-          const ok = parseDate(other.montaza_kraj);
-          return op && ok && op <= mk && ok >= mp;
-        });
-
-        const noKraj = !j.montaza_kraj && parseDate(j.montaza_pocetak);
-        const tipIcon = tip === 'nabava' ? '🚐' : tip === 'garaza' ? '🚪' : tip === 'montaza' ? '🔧' : '📐';
-        const pillStyle = noKraj ? 'border-style:dashed;' : '';
-        const overlapDot = hasOverlap ? '<div class="overlap-dot"></div>' : '';
-        const krajLabel = noKraj ? '<div style="position:absolute;top:4px;right:6px;font-size:9px;color:var(--accent);font-weight:700">kraj?</div>' : '';
-        html += '<div class="job-pill ' + pillClass + '" style="' + pillStyle + '" onclick="openDetail(' + j.id + ')">'
-              + overlapDot + krajLabel
-              + '<div class="job-pill-name">' + tipIcon + ' ' + j.kupac + '</div>'
-              + '<div class="job-pill-sub">' + sub + '</div>'
-              + '<div class="job-pill-addr">📍 ' + j.adresa.split(',')[0] + '</div>'
-              + '</div>';
-      });
-
-      // Add extra "+" only if not past
+      dayJobs.forEach(j => { html += buildPill(j); });
       if (!isPast) {
         html += '<div class="cal-empty-col" style="min-height:28px;margin-top:2px" data-date="' + dateStr + '" onclick="handleEmptyClick(this.dataset.date)">'
                 + '<span class="cal-empty-plus" style="font-size:14px">+</span>'
@@ -1730,6 +1747,14 @@ function updateEditTipForm() {
   if (izmF)  izmF.style.display  = showIzmjera ? '' : 'none';
   if (montF) montF.style.display = showMontaza ? '' : 'none';
   if (wRow)  wRow.style.display  = showMontaza ? '' : 'none';
+
+  // Dynamic labels
+  const eIzmLbl = document.getElementById('e-izm-time-label');
+  if (eIzmLbl) eIzmLbl.textContent = 'Vrijeme izmjere';
+  const eMontLbl = document.getElementById('e-mont-poc-time-label');
+  if (eMontLbl) eMontLbl.textContent = tip === 'garaza' ? 'Vrijeme montaže / GV' : 'Vrijeme montaže';
+  const eNabLbl = document.getElementById('e-nabava-time-label');
+  if (eNabLbl) eNabLbl.textContent = 'Vrijeme nabave materijala';
 }
 
 function openEditModal() {
@@ -1910,6 +1935,16 @@ function updateTipForm() {
   if (izmjeraFields) izmjeraFields.style.display = showIzmjera ? '' : 'none';
   if (montazaFields) montazaFields.style.display = showMontaza ? '' : 'none';
   if (weekendRow)    weekendRow.style.display    = showMontaza ? '' : 'none';
+
+  // Update dynamic labels
+  const izmTimeLabel = document.getElementById('f-izm-time-label');
+  if (izmTimeLabel) izmTimeLabel.textContent = 'Vrijeme izmjere';
+
+  const montTimeLabel = document.getElementById('f-mont-poc-time-label');
+  if (montTimeLabel) montTimeLabel.textContent = tip === 'garaza' ? 'Vrijeme montaže / GV' : 'Vrijeme montaže';
+
+  const nabTimeLabel = document.getElementById('f-nabava-time-label');
+  if (nabTimeLabel) nabTimeLabel.textContent = 'Vrijeme nabave materijala';
 
   if (prefillDate && document.getElementById('add-modal').classList.contains('open')) {
     applyPrefillDate();

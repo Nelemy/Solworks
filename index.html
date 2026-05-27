@@ -1152,48 +1152,27 @@ function renderCalendar() {
          + '</div>';
   };
 
-  // Find max jobs in any single day this week
-  const maxJobsPerDay = Math.max(1, ...perDay.map(x => x.dayJobs.length));
-
-  // Render row by row: each row is one "slot" across all days
-  // This ensures all columns have the same number of rows → aligned heights
-  const numRows = maxJobsPerDay + 1; // +1 for the add button row
-
-  // Use CSS subgrid: one big grid, items placed by row and column
   const numCols2 = weekDays.length;
-  html += '<div class="cal-grid" style="grid-template-columns:52px repeat(' + numCols2 + ',1fr);grid-template-rows:repeat(' + numRows + ',auto)">';
-  html += '<div></div>'; // empty corner cell (col 1, row 1)
+  html += '<div class="cal-grid" style="grid-template-columns:52px repeat(' + numCols2 + ',1fr)">';
+  html += '<div></div>';
 
-  // For each job slot (row), render all day columns
-  for (let row = 0; row < numRows; row++) {
-    weekDays.forEach((d, di) => {
-      const { isPast, dateStr, dayJobs } = perDay[di];
-      const isLastRow = row === numRows - 1;
-
-      if (isLastRow) {
-        // Last row = add button
-        if (!isPast) {
-          html += '<div class="cal-empty-col" style="min-height:32px" data-date="' + dateStr + '" onclick="handleEmptyClick(this.dataset.date)">'
+  weekDays.forEach((d, di) => {
+    const { isPast, dateStr, dayJobs } = perDay[di];
+    html += '<div style="display:flex;flex-direction:column;gap:3px;min-height:60px">';
+    if (dayJobs.length === 0) {
+      const emptyClass = isPast ? 'past' : '';
+      const emptyPlus = isPast ? '' : '+';
+      html += '<div class="cal-empty-col ' + emptyClass + '" style="flex:1" data-date="' + dateStr + '" onclick="handleEmptyClick(this.dataset.date)">'
+            + '<span class="cal-empty-plus">' + emptyPlus + '</span></div>';
+    } else {
+      dayJobs.forEach(j => { html += buildPill(j, d); });
+      if (!isPast) {
+        html += '<div class="cal-empty-col" style="min-height:32px;margin-top:2px" data-date="' + dateStr + '" onclick="handleEmptyClick(this.dataset.date)">'
                 + '<span class="cal-empty-plus" style="font-size:14px">+</span></div>';
-        } else {
-          html += '<div></div>';
-        }
-      } else if (row < dayJobs.length) {
-        // Has a job for this slot
-        html += buildPill(dayJobs[row], d);
-      } else if (row === 0 && dayJobs.length === 0) {
-        // Empty day - show empty placeholder in first row
-        const emptyClass = isPast ? 'past' : '';
-        const emptyPlus = isPast ? '' : '+';
-        html += '<div class="cal-empty-col ' + emptyClass + '" style="grid-row:span ' + (numRows - 1) + '" data-date="' + dateStr + '" onclick="handleEmptyClick(this.dataset.date)">'
-              + '<span class="cal-empty-plus">' + emptyPlus + '</span></div>';
-      } else if (dayJobs.length > 0 && row >= dayJobs.length) {
-        // Filler cell - invisible, just keeps grid aligned
-        html += '<div style="min-height:4px"></div>';
       }
-      // else: empty day already spanned, skip
-    });
-  }
+    }
+    html += '</div>';
+  });
   html += '</div>'; // cal-grid
 
   // ── MONTAŽA SUMMARY ROW ──

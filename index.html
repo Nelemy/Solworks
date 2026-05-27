@@ -1069,7 +1069,9 @@ function renderCalendar() {
   // Set CSS custom property for grid columns - applies to all grid elements
   // col count set inline on cal-week-grid
 
-  html += '<div class="cal-day-row">';
+  const nDays = weekDays.length;
+  html += '<div style="display:flex;flex-direction:column;gap:4px">';
+  html += '<div style="display:grid;grid-template-columns:52px repeat(' + nDays + ',1fr);gap:4px">';
   html += '<div class="cal-corner"></div>';
   weekDays.forEach(d => {
     const isToday = isSameDay(d, today);
@@ -1165,7 +1167,7 @@ function renderCalendar() {
   // Each pill gets explicit grid-column and grid-row → perfect alignment
   const totalRows = maxRows + 1; // +1 for add row
 
-  html += '<div style="display:grid;grid-template-columns:52px repeat(' + nCols + ',1fr);grid-template-rows:repeat(' + totalRows + ',auto);gap:4px;margin-top:4px">';
+  html += '<div style="display:grid;grid-template-columns:52px repeat(' + nCols + ',1fr);grid-template-rows:repeat(' + totalRows + ',auto);gap:4px">';
 
   // Render each pill at its explicit grid position
   for (let row = 0; row < maxRows; row++) {
@@ -1206,7 +1208,8 @@ function renderCalendar() {
     }
   });
 
-  html += '</div>';
+  html += '</div>'; // pill grid
+  html += '</div>'; // outer wrapper
 
   // ── MONTAŽA SUMMARY ROW ──
   // Collect all unique jobs active this week
@@ -1220,7 +1223,7 @@ function renderCalendar() {
 
   if (weekMontazaJobs.length > 0) {
     html += '<div class="montaza-row-wrap"><div class="montaza-row-head">🔧 Montaže ovog tjedna — ' + weekMontazaJobs.length + (weekMontazaJobs.length === 1 ? ' posao' : weekMontazaJobs.length < 5 ? ' posla' : ' poslova') + '</div>';
-    html += '<div style="padding:8px 10px;display:flex;flex-direction:column;gap:6px;">';
+    html += '<div style="padding:8px 10px;display:flex;flex-direction:column;gap:6px">';
     weekMontazaJobs.forEach(j => {
       const mp = parseDate(j.montaza_pocetak);
       const mk = parseDate(j.montaza_kraj);
@@ -1258,7 +1261,7 @@ function renderCalendar() {
 
   if (weekIzmjere.length > 0) {
     html += '<div class="izmjere-row-wrap" style="margin-top:6px"><div class="izmjere-row-head">📐 Izmjere ovog tjedna — ' + weekIzmjere.length + (weekIzmjere.length === 1 ? ' izmjera' : weekIzmjere.length < 5 ? ' izmjere' : ' izmjera') + '</div>';
-    html += '<div style="padding:8px 10px;display:flex;flex-direction:column;gap:6px;">';
+    html += '<div style="padding:8px 10px;display:flex;flex-direction:column;gap:6px">';
     weekIzmjere.forEach(({job: j, day: d}) => {
       const dayStr = d.toLocaleDateString("hr-HR", {weekday:"long", day:"numeric", month:"numeric"});
       const time = j.vrijeme_izmjere ? ' u ' + j.vrijeme_izmjere : '';

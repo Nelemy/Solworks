@@ -1827,24 +1827,28 @@ async function deleteJob() {
   await reloadAndRender();
 }
 
-function archiveJob() {
+async function archiveJob() {
   if (!confirm('Arhivirati ovaj posao?')) return;
   const jobs = getJobs();
-  const job = jobs.find(j=>j.id===currentJobId);
-  if (job) { job.arhiva = true; saveJob(job).catch(console.error); }
+  const job = jobs.find(j => j.id === currentJobId);
+  if (!job) return;
+  try {
+    // Update cache immediately so UI doesn't go blank
+    job.arhiva = true;
+    // Save to DB - await so we know it succeeded
+    await sbUpdate(job.id, { arhiva: true });
+    showToast('Posao arhiviran ✓');
+  } catch(e) {
+    // Revert on failure
+    job.arhiva = false;
+    showToast('Greška pri arhiviranju: ' + e.message, true);
+    return;
+  }
   closeDetailDirect();
+  await reloadAndRender();
 }
 
 async function saveAndClose() {
-  const jobs = getJobs();
-  const job = jobs.find(j=>j.id===currentJobId);
-  if (job) {
-    try {
-      await saveJob(job);
-      } catch(e) {
-      showToast('Greška: ' + e.message, true);
-    }
-  }
   closeDetailDirect();
   await reloadAndRender();
 }

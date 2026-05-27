@@ -1100,118 +1100,113 @@ function renderCalendar() {
     return { d, isPast, dateStr, dayJobs };
   });
 
-  // ── WEEK GRID: CSS subgrid approach ──────────────────────────────────────
-  // Strategy: one outer grid per "job slot row", each row spans all day columns.
-  // This guarantees perfect alignment without any JS height measurement.
+  // ── WEEK GRID ─────────────────────────────────────────────────────────────
+  // Build pill data first
+  const buildPillHtml = (j, d) => {
+    const mp = parseDate(j.montaza_pocetak);
+    const mk = parseDate(j.montaza_kraj);
+    const actualEnd = mp && mk ? getActualEnd(j) : null;
+    const inMont = mp && (mk ? (d >= mp && d <= actualEnd && isWorkingDay(d, j)) : isSameDay(d, mp));
+    const tip = j.tip_posla || 'izmjera';
 
-  // Pre-calculate pill data for each day
-  const pillData = weekDays.map((d, di) => {
-    const { isPast, dateStr, dayJobs } = perDay[di];
-    return dayJobs.map(j => {
-      const mp = parseDate(j.montaza_pocetak);
-      const mk = parseDate(j.montaza_kraj);
-      const actualEnd = mp && mk ? getActualEnd(j) : null;
-      const inMont = mp && (mk ? (d >= mp && d <= actualEnd && isWorkingDay(d, j)) : isSameDay(d, mp));
-      const tip = j.tip_posla || 'izmjera';
+    let pillClass;
+    if (tip === 'nabava') pillClass = 'job-pill-nabava';
+    else if (tip === 'garaza') pillClass = j.montaza_gotova ? 'job-pill-gotovo' : 'job-pill-garaza';
+    else if (inMont) pillClass = j.montaza_gotova ? 'job-pill-gotovo' : 'job-pill-montaza';
+    else pillClass = 'job-pill-izmjera';
 
-      let pillClass;
-      if (tip === 'nabava') pillClass = 'job-pill-nabava';
-      else if (tip === 'garaza') pillClass = j.montaza_gotova ? 'job-pill-gotovo' : 'job-pill-garaza';
-      else if (inMont) pillClass = j.montaza_gotova ? 'job-pill-gotovo' : 'job-pill-montaza';
-      else pillClass = 'job-pill-izmjera';
+    let sub = '';
+    if (inMont && !j.montaza_gotova) {
+      const isFirstDay = isSameDay(d, mp);
+      const totalDays = getIntendedDays(j);
+      let dayNum = 0, cur = new Date(mp);
+      while (cur <= d) { if (isWorkingDay(cur, j)) dayNum++; cur = addDays(cur, 1); }
+      sub = (isFirstDay && j.montaza_pocetak_vrijeme ? j.montaza_pocetak_vrijeme + ' · ' : '') + dayNum + '/' + totalDays;
+    } else if (inMont && j.montaza_gotova) {
+      sub = '✓';
+    } else if (tip === 'nabava') {
+      const dn = parseDate(j.datum_nabave);
+      sub = dn && isSameDay(d, dn) ? (j.vrijeme_nabave || '') : '';
+    } else {
+      sub = j.vrijeme_izmjere || '';
+    }
 
-      let sub = '';
-      if (inMont && !j.montaza_gotova) {
-        const isFirstDay = isSameDay(d, mp);
-        const totalDays = getIntendedDays(j);
-        let dayNum = 0, cur = new Date(mp);
-        while (cur <= d) { if (isWorkingDay(cur, j)) dayNum++; cur = addDays(cur, 1); }
-        const timeStr = isFirstDay && j.montaza_pocetak_vrijeme ? j.montaza_pocetak_vrijeme + ' · ' : '';
-        sub = timeStr + dayNum + '/' + totalDays;
-      } else if (inMont && j.montaza_gotova) {
-        sub = '✓';
-      } else if (tip === 'nabava') {
-        const dn = parseDate(j.datum_nabave);
-        sub = dn && isSameDay(d, dn) ? (j.vrijeme_nabave || '') : '';
-      } else {
-        sub = j.vrijeme_izmjere || '';
-      }
-
-      const hasOverlap = inMont && !j.montaza_gotova && jobs.some(other => {
-        if (other.id === j.id || other.montaza_gotova) return false;
-        const op = parseDate(other.montaza_pocetak);
-        const ok2 = parseDate(other.montaza_kraj);
-        return op && ok2 && op <= (mk||mp) && ok2 >= mp;
-      });
-
-      const noKraj = !j.montaza_kraj && mp;
-      const tipIcon = tip === 'nabava' ? '🚐' : tip === 'garaza' ? '🚪' : tip === 'montaza' ? '🔧' : '📐';
-      const borderStyle = noKraj ? 'border-style:dashed;' : '';
-      const overlapDot = hasOverlap ? '<div class="overlap-dot"></div>' : '';
-      const krajLabel = noKraj ? '<div style="position:absolute;top:4px;right:6px;font-size:9px;color:var(--accent);font-weight:700">kraj?</div>' : '';
-
-      return {
-        html: '<div class="job-pill ' + pillClass + '" style="' + borderStyle + 'height:100%;box-sizing:border-box" onclick="openDetail(' + j.id + ')">'
-            + overlapDot + krajLabel
-            + '<div class="job-pill-name">' + tipIcon + ' ' + j.kupac + '</div>'
-            + (sub ? '<div class="job-pill-sub">' + sub + '</div>' : '')
-            + '<div class="job-pill-addr">📍 ' + j.adresa + '</div>'
-            + (j.tel ? '<div class="job-pill-tel">📞 ' + j.tel + '</div>' : '')
-            + '</div>'
-      };
+    const hasOverlap = inMont && !j.montaza_gotova && jobs.some(o => {
+      if (o.id === j.id || o.montaza_gotova) return false;
+      const op = parseDate(o.montaza_pocetak), ok2 = parseDate(o.montaza_kraj);
+      return op && ok2 && op <= (mk||mp) && ok2 >= mp;
     });
+
+    const noKraj = !j.montaza_kraj && mp;
+    const tipIcon = tip==='nabava'?'🚐':tip==='garaza'?'🚪':tip==='montaza'?'🔧':'📐';
+    const overlapDot = hasOverlap ? '<div class="overlap-dot"></div>' : '';
+    const krajLabel = noKraj ? '<div style="position:absolute;top:4px;right:6px;font-size:9px;color:var(--accent);font-weight:700">kraj?</div>' : '';
+
+    return '<div class="job-pill ' + pillClass + '" style="' + (noKraj?'border-style:dashed;':'') + '" onclick="openDetail(' + j.id + ')">'
+         + overlapDot + krajLabel
+         + '<div class="job-pill-name">' + tipIcon + ' ' + j.kupac + '</div>'
+         + (sub ? '<div class="job-pill-sub">' + sub + '</div>' : '')
+         + '<div class="job-pill-addr">📍 ' + j.adresa + '</div>'
+         + (j.tel ? '<div class="job-pill-tel">📞 ' + j.tel + '</div>' : '')
+         + '</div>';
+  };
+
+  // Collect pills per day column
+  const dayPills = weekDays.map((d, di) => {
+    const { isPast, dateStr, dayJobs } = perDay[di];
+    return { d, isPast, dateStr, pills: dayJobs.map(j => buildPillHtml(j, d)) };
   });
 
   const nCols = weekDays.length;
-  const maxSlots = Math.max(0, ...pillData.map(p => p.length));
+  const maxRows = Math.max(0, ...dayPills.map(dp => dp.pills.length));
 
-  // Each "row band" is a separate grid so row height auto-sizes to tallest cell
-  // Row band = one horizontal slice across all day columns
-  // Using display:contents trick to make pills participate in parent grid rows
+  // Single CSS grid: cols = label(52px) + nCols day columns
+  // Rows = one per pill slot + one for add buttons
+  // Each pill gets explicit grid-column and grid-row → perfect alignment
+  const totalRows = maxRows + 1; // +1 for add row
 
-  html += '<div class="cal-week-grid" style="display:grid;grid-template-columns:52px repeat(' + nCols + ',1fr);gap:4px;margin-top:4px">';
-  html += '<div></div>'; // corner
+  html += '<div style="display:grid;grid-template-columns:52px repeat(' + nCols + ',1fr);grid-template-rows:repeat(' + totalRows + ',auto);gap:4px;margin-top:4px">';
 
-  if (maxSlots === 0) {
-    // No jobs this week - show empty cols
-    weekDays.forEach((d, di) => {
-      const { isPast, dateStr } = perDay[di];
-      const cls = isPast ? 'past' : '';
-      const plus = isPast ? '' : '+';
-      html += '<div class="cal-empty-col ' + cls + '" data-date="' + dateStr + '" onclick="handleEmptyClick(this.dataset.date)">'
-            + '<span class="cal-empty-plus">' + plus + '</span></div>';
-    });
-  } else {
-    // For each slot row, render one cell per day column
-    // Each row in the grid will auto-size to the tallest pill in that row
-    for (let slot = 0; slot < maxSlots; slot++) {
-      html += '<div></div>'; // row label spacer
-      weekDays.forEach((d, di) => {
-        const { isPast, dateStr } = perDay[di];
-        const pill = pillData[di][slot];
-        if (pill) {
-          html += pill.html;
-        } else {
-          // Empty spacer cell - transparent, keeps column in place
-          html += '<div style="min-height:8px"></div>';
-        }
-      });
-    }
-
-    // Add button row
-    html += '<div></div>'; // spacer
-    weekDays.forEach((d, di) => {
-      const { isPast, dateStr } = perDay[di];
-      if (isPast) {
-        html += '<div style="min-height:8px"></div>';
+  // Render each pill at its explicit grid position
+  for (let row = 0; row < maxRows; row++) {
+    // col 1 = spacer (occupied by header label area - leave empty)
+    for (let col = 0; col < nCols; col++) {
+      const { isPast, dateStr, pills } = dayPills[col];
+      const gridPos = 'grid-column:' + (col+2) + ';grid-row:' + (row+1) + ';';
+      if (pills[row]) {
+        // Wrap pill in a positioned grid cell
+        html += '<div style="' + gridPos + 'min-width:0">' + pills[row] + '</div>';
       } else {
-        html += '<div class="cal-empty-col" style="min-height:36px" data-date="' + dateStr + '" onclick="handleEmptyClick(this.dataset.date)">'
-              + '<span class="cal-empty-plus" style="font-size:14px">+</span></div>';
+        // Empty spacer - invisible filler to keep grid intact
+        html += '<div style="' + gridPos + 'min-height:4px"></div>';
       }
-    });
+    }
   }
 
-  html += '</div>'; // cal-week-grid
+  // Add button row (last row)
+  for (let col = 0; col < nCols; col++) {
+    const { isPast, dateStr } = dayPills[col];
+    const gridPos = 'grid-column:' + (col+2) + ';grid-row:' + (maxRows+1) + ';';
+    if (!isPast) {
+      html += '<div class="cal-empty-col" style="' + gridPos + 'min-height:36px" data-date="' + dateStr + '" onclick="handleEmptyClick(this.dataset.date)">'
+            + '<span class="cal-empty-plus" style="font-size:14px">+</span></div>';
+    } else {
+      html += '<div style="' + gridPos + 'min-height:4px"></div>';
+    }
+  }
+
+  // Empty day placeholders (days with no pills at all need a visible empty state)
+  dayPills.forEach(({ isPast, dateStr, pills }, col) => {
+    if (pills.length === 0) {
+      const gridPos = 'grid-column:' + (col+2) + ';grid-row:1/' + (maxRows+1) + ';';
+      const cls = isPast ? 'past' : '';
+      const plus = isPast ? '' : '+';
+      html += '<div class="cal-empty-col ' + cls + '" style="' + gridPos + '" data-date="' + dateStr + '" onclick="handleEmptyClick(this.dataset.date)">'
+            + '<span class="cal-empty-plus">' + plus + '</span></div>';
+    }
+  });
+
+  html += '</div>';
 
   // ── MONTAŽA SUMMARY ROW ──
   // Collect all unique jobs active this week

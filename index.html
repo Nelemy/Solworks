@@ -1734,6 +1734,9 @@ function pretvoriUMontazu() {
 
 function updateEditTipForm() {
   const tip = document.querySelector('input[name="edit_tip_posla"]:checked')?.value || 'izmjera';
+  const prevTip = updateEditTipForm._prevTip;
+  updateEditTipForm._prevTip = tip;
+
   const izmF  = document.getElementById('e-izmjera-termini');
   const nabF  = document.getElementById('e-nabava-termini');
   const montF = document.getElementById('e-montaza-termini');
@@ -1755,6 +1758,29 @@ function updateEditTipForm() {
   if (eMontLbl) eMontLbl.textContent = tip === 'garaza' ? 'Vrijeme montaže / GV' : 'Vrijeme montaže';
   const eNabLbl = document.getElementById('e-nabava-time-label');
   if (eNabLbl) eNabLbl.textContent = 'Vrijeme nabave materijala';
+
+  // Transfer dates when switching types
+  if (prevTip && prevTip !== tip) {
+    const izmDat   = document.getElementById('e-izm')?.value;
+    const izmTime  = document.getElementById('e-izm-time')?.value;
+    const montDat  = document.getElementById('e-mont-poc')?.value;
+    const montTime = document.getElementById('e-mont-poc-time')?.value;
+    const nabDat   = document.getElementById('e-nabava-dat')?.value;
+    const nabTime  = document.getElementById('e-nabava-time')?.value;
+
+    // Pick the best source date from previous type
+    let srcDate = '', srcTime = '';
+    if (prevTip === 'izmjera')  { srcDate = izmDat;  srcTime = izmTime; }
+    else if (prevTip === 'nabava')   { srcDate = nabDat;  srcTime = nabTime; }
+    else if (prevTip === 'montaza' || prevTip === 'garaza') { srcDate = montDat; srcTime = montTime; }
+
+    // Apply to new type's date field
+    if (srcDate) {
+      if (tip === 'izmjera')  { if(document.getElementById('e-izm')) document.getElementById('e-izm').value = srcDate; if(izmTime===''&&srcTime&&document.getElementById('e-izm-time')) document.getElementById('e-izm-time').value = srcTime; }
+      else if (tip === 'nabava') { if(document.getElementById('e-nabava-dat')) document.getElementById('e-nabava-dat').value = srcDate; if(nabTime===''&&srcTime&&document.getElementById('e-nabava-time')) document.getElementById('e-nabava-time').value = srcTime; }
+      else if (tip === 'montaza' || tip === 'garaza') { if(document.getElementById('e-mont-poc')) document.getElementById('e-mont-poc').value = srcDate; if(montTime===''&&srcTime&&document.getElementById('e-mont-poc-time')) document.getElementById('e-mont-poc-time').value = srcTime; }
+    }
+  }
 }
 
 function openEditModal() {
@@ -1922,6 +1948,9 @@ function applyPrefillDate() {
 
 function updateTipForm() {
   const tip = document.querySelector('input[name="tip_posla"]:checked')?.value || 'izmjera';
+  const prevTip = updateTipForm._prevTip;
+  updateTipForm._prevTip = tip;
+
   const izmjeraFields = document.getElementById('f-izmjera-termini');
   const nabavaFields  = document.getElementById('f-nabava-termini');
   const montazaFields = document.getElementById('f-montaza-termini');
@@ -1936,15 +1965,33 @@ function updateTipForm() {
   if (montazaFields) montazaFields.style.display = showMontaza ? '' : 'none';
   if (weekendRow)    weekendRow.style.display    = showMontaza ? '' : 'none';
 
-  // Update dynamic labels
   const izmTimeLabel = document.getElementById('f-izm-time-label');
   if (izmTimeLabel) izmTimeLabel.textContent = 'Vrijeme izmjere';
-
   const montTimeLabel = document.getElementById('f-mont-poc-time-label');
   if (montTimeLabel) montTimeLabel.textContent = tip === 'garaza' ? 'Vrijeme montaže / GV' : 'Vrijeme montaže';
-
   const nabTimeLabel = document.getElementById('f-nabava-time-label');
   if (nabTimeLabel) nabTimeLabel.textContent = 'Vrijeme nabave materijala';
+
+  // Transfer date when switching types (only if no prefill override)
+  if (prevTip && prevTip !== tip && !prefillDate) {
+    const izmDat   = document.getElementById('f-izm')?.value;
+    const izmTime  = document.getElementById('f-izm-time')?.value;
+    const montDat  = document.getElementById('f-mont-poc')?.value;
+    const montTime = document.getElementById('f-mont-poc-time')?.value;
+    const nabDat   = document.getElementById('f-nabava-dat')?.value;
+    const nabTime  = document.getElementById('f-nabava-time')?.value;
+
+    let srcDate = '', srcTime = '';
+    if (prevTip === 'izmjera')  { srcDate = izmDat;  srcTime = izmTime; }
+    else if (prevTip === 'nabava')   { srcDate = nabDat;  srcTime = nabTime; }
+    else if (prevTip === 'montaza' || prevTip === 'garaza') { srcDate = montDat; srcTime = montTime; }
+
+    if (srcDate) {
+      if (tip === 'izmjera')  { document.getElementById('f-izm').value = srcDate; if(srcTime) document.getElementById('f-izm-time').value = srcTime; }
+      else if (tip === 'nabava') { const nd = document.getElementById('f-nabava-dat'); if(nd) nd.value = srcDate; const nt = document.getElementById('f-nabava-time'); if(nt&&srcTime) nt.value = srcTime; }
+      else if (tip === 'montaza' || tip === 'garaza') { document.getElementById('f-mont-poc').value = srcDate; if(srcTime) document.getElementById('f-mont-poc-time').value = srcTime; }
+    }
+  }
 
   if (prefillDate && document.getElementById('add-modal').classList.contains('open')) {
     applyPrefillDate();

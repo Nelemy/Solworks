@@ -110,7 +110,7 @@ body { background: var(--bg); color: var(--text); font-family: var(--font-body);
   display: grid;
   gap: 4px;
   margin-top: 4px;
-  align-items: stretch;
+  align-items: start;
 }
 .cal-unified-grid > * {
   min-height: 60px;
@@ -282,6 +282,9 @@ body { background: var(--bg); color: var(--text); font-family: var(--font-body);
 .job-pill-nabava  .job-pill-sub { color: #e8a027; }
 .job-pill-garaza  .job-pill-sub { color: #8a5cf6; }
 .job-pill-gotovo .job-pill-sub  { color: var(--green); }
+.job-pill-tel { font-size: 10px; color: var(--muted); margin-top: 1px; }
+.job-pill-name { font-weight: 700; color: var(--text); font-size: 13px; line-height: 1.2; }
+.job-pill-addr { font-size: 10px; color: var(--muted); margin-top: 1px; }
 .overlap-dot {
   position: absolute; top: 4px; right: 4px;
   width: 6px; height: 6px; border-radius: 50%;
@@ -1097,19 +1100,9 @@ function renderCalendar() {
     return { d, isPast, dateStr, dayJobs };
   });
 
-  // Max jobs any day has = number of rows
-  const maxRows = Math.max(1, ...perDay.map(x => x.dayJobs.length));
-
-  // Render row by row so CSS grid aligns heights across columns
-  html += '<div class="cal-grid" style="grid-template-rows: repeat(' + (maxRows + 1) + ', auto)">';
+  html += '<div class="cal-grid">';
   html += '<div></div>'; // empty corner
 
-  // Row 0: first job slot per column (or empty)
-  // We render column by column but each column renders ALL its rows at once
-  // using explicit grid-row placement
-
-  // Actually render as before but use CSS to sync heights:
-  // Each cal-grid-col gets same stretch height via align-items:stretch on parent
   weekDays.forEach((d, di) => {
     const { isPast, dateStr, dayJobs } = perDay[di];
 
@@ -1159,18 +1152,19 @@ function renderCalendar() {
       const pillStyle = noKraj ? 'border-style:dashed;' : '';
       const overlapDot = hasOverlap ? '<div class="overlap-dot"></div>' : '';
       const krajLabel = noKraj ? '<div style="position:absolute;top:4px;right:6px;font-size:9px;color:var(--accent);font-weight:700">kraj?</div>' : '';
-      return '<div class="job-pill ' + pillClass + '" style="' + pillStyle + 'flex:1" onclick="openDetail(' + j.id + ')">'
+      return '<div class="job-pill ' + pillClass + '" style="' + pillStyle + '" onclick="openDetail(' + j.id + ')">'
            + overlapDot + krajLabel
            + '<div class="job-pill-name">' + tipIcon + ' ' + j.kupac + '</div>'
-           + '<div class="job-pill-sub">' + sub + '</div>'
-           + '<div class="job-pill-addr">📍 ' + j.adresa.split(',')[0] + '</div>'
+           + (sub ? '<div class="job-pill-sub">' + sub + '</div>' : '')
+           + '<div class="job-pill-addr">📍 ' + j.adresa + '</div>'
+           + (j.tel ? '<div class="job-pill-tel">📞 ' + j.tel + '</div>' : '')
            + '</div>';
     };
 
     if (dayJobs.length === 0) {
       const emptyClass = isPast ? 'past' : '';
       const emptyPlus = isPast ? '' : '+';
-      html += '<div class="cal-empty-col ' + emptyClass + '" style="flex:1" data-date="' + dateStr + '" onclick="handleEmptyClick(this.dataset.date)">'
+      html += '<div class="cal-empty-col ' + emptyClass + '" data-date="' + dateStr + '" onclick="handleEmptyClick(this.dataset.date)">'
             + '<span class="cal-empty-plus">' + emptyPlus + '</span>'
             + '</div>';
     } else {
